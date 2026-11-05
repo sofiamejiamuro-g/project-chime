@@ -1,0 +1,37 @@
+{
+  "accounts": [
+    {
+      "account_id": "ACC-TEL-001",
+      "cli_phone": "+14155552671",
+      "postcode": "94105",
+      "security_password": "TelecomSecure123!",
+      "chat_user_id": "usr_tel_001",
+      "products": ["Gigabit Fiber Broadband", "Digital Stream Box"],
+      "billing_status": "Current",
+      "line_status": "Degraded / Flashing Orange",
+      "tags": ["techsetup", "broadband", "voice_ivr", "chat"]
+    },
+    {
+      "account_id": "ACC-BNK-002",
+      "cli_phone": "+12125559812",
+      "postcode": "10001",
+      "security_password": "VaultShield99!",
+      "chat_user_id": "usr_bnk_002",
+      "products": ["Platinum Checking", "High-Yield Savings"],
+      "billing_status": "Current",
+      "line_status": "Verified",
+      "tags": ["account_management", "verification", "transfers", "voice_ivr", "chat"]
+    },
+    {
+      "account_id": "ACC-RTL-003",
+      "cli_phone": "+13125554321",
+      "postcode": "60601",
+      "security_password": "OrderFast2026*",
+      "chat_user_id": "usr_rtl_003",
+      "products": ["Annual VIP Delivery Membership"],
+      "billing_status": "Current",
+      "line_status": "Order Dispatched #ORD-88129",
+      "tags": ["order_tracking", "returns", "delivery", "voice_ivr", "chat"]
+    }
+  ]
+}

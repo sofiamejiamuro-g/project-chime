@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project-chime"
+version = "0.1.0"
+description = "Project CHIME: Unified Voice IVR & Digital Chat Simulation and Manual QA Harmonizer for CXAS"
+readme = "README.md"
+authors = [
+    { name = "Sofia Mejia", email = "sofiamejiamuro@google.com" }
+]
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0"
+]
+
+[project.scripts]
+chime = "chime.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["chime*"]
