@@ -4,7 +4,7 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Zero External Excel Dependencies](https://img.shields.io/badge/Excel-Native%20OpenXML-green.svg)]()
+[![Zero External Spreadsheet Dependencies](https://img.shields.io/badge/Spreadsheets-Google%20Sheets%20%2F%20OpenXML-green.svg)]()
 [![cxas-scrapi Compliant](https://img.shields.io/badge/Evals-cxas--scrapi%20Native-blue.svg)](https://github.com/GoogleCloudPlatform/cxas-scrapi)
 [![Omnichannel](https://img.shields.io/badge/Modality-Voice%20IVR%20%2B%20Digital%20Chat-orange.svg)]()
 [![Integration: cxas-scrapi](https://img.shields.io/badge/Integration-cxas--scrapi%20Evals-brightgreen.svg)]()
@@ -26,8 +26,8 @@ As conversational sub-agents undergo continuous prompt engineering, OpenAPI tool
   ┌──────────────────────────┐        ┌──────────────────────────┐       ┌──────────────────────────┐
   │ Prompts, OpenAPI tools & │        │ Human testers lack real  │       │ Voice IVR and Web Chat   │
   │ auth callbacks change    │───────▶│ accounts & credentials;  │──────▶│ tested in silos; subtle  │
-  │ daily; static test       │        │ 35%-40% false-failure    │       │ discrepancies slip into  │
-  │ matrices rot in hours.   │        │ rate during UAT.         │       │ production unchecked.    │
+  │ daily; static test       │        │ unauthenticated calls    │       │ discrepancies slip into  │
+  │ matrices rot quickly.    │        │ cause false failures.    │       │ production unchecked.    │
   └──────────────────────────┘        └──────────────────────────┘       └──────────────────────────┘
 ```
 
@@ -43,7 +43,7 @@ From a single CLI invocation, Project CHIME simultaneously synthesizes four prod
 | :--- | :--- | :--- | :--- |
 | **1. Native `SimulationEvals`** | `evals/simulations/*.yaml` | Automated CI/CD, `cxas-scrapi` Runner | Headless LLM user conversation simulation specifications with persona guidance, success criteria, and session parameters. |
 | **2. Native Platform Goldens** | `evals/goldens/*.yaml` | QA Automation, Regression Gate | Turn-by-turn deterministic evaluation suites with snapshot versioning (`v1_baseline`, `v2`, `history.json`). |
-| **3. Zero-Context Manual QA Suites** | `evals/manual_qa/*.xlsx` | UAT Testers, Manual QA, Business Owners | Multi-tab Excel workbooks with turn-by-turn mock dialogues and pre-hydrated customer credentials. **Zero external dependencies** (native OpenXML). |
+| **3. Zero-Context Manual QA Suites** | `evals/manual_qa/*.xlsx` | UAT Testers, Manual QA, Business Owners | Multi-tab Spreadsheet workbooks (importable directly into Google Sheets or any OpenXML spreadsheet viewer) with turn-by-turn mock dialogues and pre-hydrated customer credentials. **Zero external dependencies** (native OpenXML). |
 | **4. Decisions & Changes Reports** | `evals/reports/*_Decisions_Report.md` | Tech Leads, Security, Compliance | Executive audit trail detailing HLV/LLV security rationale, 5-pillar guardrails, detected tool diffs, and priority distribution. |
 
 ---
@@ -83,7 +83,7 @@ From a single CLI invocation, Project CHIME simultaneously synthesizes four prod
                                     │                           │
                    ┌────────────────┴───────────┐   ┌───────────┴────────────────┐
                    ▼                            ▼   ▼                            ▼
-        [ cxas-scrapi SIMULATIONS ]   [ PLATFORM GOLDENS ]  [ ZERO-CONTEXT EXCEL ]  [ DECISIONS REPORT ]
+        [ cxas-scrapi SIMULATIONS ]   [ PLATFORM GOLDENS ]  [ ZERO-CONTEXT SPREADSHEETS ] [ DECISIONS REPORT ]
         evals/simulations/*.yaml      evals/goldens/*.yaml  evals/manual_qa/*.xlsx  evals/reports/*.md
         - LLM User Persona Guide      - Turn-by-Turn Goldens- Dedicated IVR/Chat    - Mathematical Audits
         - Session Parameters          - Snapshot Versioning - Pre-Hydrated Creds    - Code Diffs & Policy
@@ -113,7 +113,7 @@ Testers never face a blank prompt asking for an unknown customer account. Each t
 * **Account Holdings**: Active products, balances, reservation codes, or tracking numbers matching mock tool responses.
 
 ### 3. Dedicated Dual-Channel Tabs & Comprehensive Column Schema
-Workbooks automatically partition test cases into dedicated tabs for **Voice IVR** (telephony testing with acoustic timeouts and DTMF keypad checks) and **Digital Chat** (messaging widget flows with session tokens).
+Workbooks automatically partition test cases into dedicated tabs for **Voice IVR** (telephony testing with acoustic timeouts and DTMF keypad checks) and **Digital Chat** (messaging widget flows with session tokens). Generated workbooks are fully compatible with **Google Sheets** and standard OpenXML viewers.
 
 Each sheet includes 16 standardized operational columns:
 1. `Test Case ID`: Unique identifier (e.g. `TC-SAN-TECH-001`).
@@ -134,7 +134,7 @@ Each sheet includes 16 standardized operational columns:
 16. `Status`: Ready-made status dropdown (`PASS`, `FAIL`, `BLOCKED`, `NOT_RUN`).
 
 ### 4. Zero External Dependencies
-The entire Excel generation engine is built using **pure Python standard library OpenXML streaming** (`chime/generators/openxml_excel.py`). It requires **zero external libraries** (no `openpyxl`, no `pandas`, no `xlsxwriter`). It runs in any constrained CI container, Cloud Shell, or sandbox in milliseconds.
+The entire spreadsheet generation engine is built using **pure Python standard library OpenXML streaming** (`chime/generators/openxml_excel.py`). Generated `.xlsx` workbooks open natively in **Google Sheets**, Microsoft Excel, or LibreOffice. It requires **zero external libraries** (no `openpyxl`, no `pandas`, no `xlsxwriter`). It runs in any constrained CI container, Cloud Shell, or sandbox in milliseconds.
 
 ---
 
@@ -297,7 +297,7 @@ Processing journey: Customer Support (customer_support)...
    • Total Test Cases:      12
    • Automated Simulations: ./evals/simulations/
    • Platform Goldens:      ./evals/goldens/ (Active & Version History)
-   • Manual QA Excel:       ./evals/manual_qa/Sanity_Manual_QA_Suite.xlsx
+   • Manual QA Spreadsheet: ./evals/manual_qa/Sanity_Manual_QA_Suite.xlsx (Google Sheets / OpenXML)
    • Decisions Report:      ./evals/reports/Sanity_Decisions_Report.md
 ```
 
@@ -313,7 +313,7 @@ evals/
 │       ├── v2_20261106_013936/golden_customer_support.yaml
 │       └── history_customer_support.json          # Audit ledger of all changes
 ├── manual_qa/
-│   └── Sanity_Manual_QA_Suite.xlsx                # Multi-tab zero-context Excel workbook
+│   └── Sanity_Manual_QA_Suite.xlsx                # Multi-tab zero-context spreadsheet (Google Sheets / OpenXML)
 └── reports/
     └── Sanity_Decisions_Report.md                 # Executive changes & decisions audit
 ```
@@ -321,7 +321,7 @@ evals/
 ---
 
 #### Command B: Ingest Customer Goldens & Harmonize Regression Suite
-Ingests existing client golden test cases (YAML or Excel), introspects the sub-agent's codebase for tool/callback changes, fills missing guardrails/fallbacks up to 26 test cases, and reconciles outdated policies:
+Ingests existing client golden test cases (YAML or Spreadsheet), introspects the sub-agent's codebase for tool/callback changes, fills missing guardrails/fallbacks up to 26 test cases, and reconciles outdated policies:
 ```bash
 chime --suite regression --all \
   --profile travel \
@@ -351,7 +351,7 @@ Processing journey: Flight Booking (booking)...
 
 ✅ Synchronization Complete!
    • Total Test Cases:      78 (26 x 3 subagents)
-   • Manual QA Excel:       ./evals/manual_qa/Regression_Manual_QA_Suite.xlsx
+   • Manual QA Spreadsheet: ./evals/manual_qa/Regression_Manual_QA_Suite.xlsx (Google Sheets / OpenXML)
    • Decisions Report:      ./evals/reports/Regression_Decisions_Report.md
 ```
 
@@ -370,7 +370,7 @@ chime --suite sanity --subagent techsetup --generate-goldens \
 **What happens:**
 * Verification turns automatically adapt to: *"Sure, my patient ID is MED-99412 and my name is Eleanor Vance."*
 * `session_parameters` dynamically extracts `patient_id`, `mrn_number`, `insurance_policy`, and `primary_physician` without losing custom fields.
-* Excel columns display the medical credentials in the `Test Account` column.
+* Spreadsheet columns display the medical credentials in the `Test Account` column.
 
 ---
 
@@ -385,27 +385,14 @@ The `cxas-scrapi` runner spins up the `LLMUserConversation` simulated customer u
 
 ---
 
-## 📊 Production Impact & Operational Metrics
+## 🔍 Architectural Capabilities & QA Advantages
 
-Across production deployments and multi-turn conversational evaluations, Project CHIME provides substantial operational improvements:
+Project CHIME provides four key capabilities that streamline conversational evaluations across development and QA lifecycles:
 
-```
-                                  MEASURED EFFICIENCY GAINS
-                                  
-  Test Suite Authoring Time        ████████████████████ (Before: 2.5 Days)
-                                   ███ (With CHIME: 45 Seconds) ────────▶ 98% Reduction
-  
-  UAT False Failure Rate           ████████████ (Before: 38% False Failures)
-                                   █ (With CHIME: < 2% False Failures) ──▶ 95% Reduction
-  
-  Channel Parity Verification      ░░░░░░░░░░░░ (Before: Disconnected Silos)
-                                   ████████████ (With CHIME: 100% IVR & Chat Parity)
-```
-
-* **98% Reduction in Test Suite Authoring Time**: What previously took conversational AI engineers 2 to 3 days per release is synthesized in **under 45 seconds**.
-* **95% Reduction in UAT False Failures**: By injecting hydrated, valid credentials (CLI, postcode, DOB, PNR, SSN) into every row, API verification lookups succeed consistently, eliminating false alerts.
-* **100% Cross-Channel Parity**: Telephony IVR and Web Chat test cases are synchronized against identical business rules, tools, and guardrails.
-* **Zero Onboarding Ramp for QA**: Junior testers and client business stakeholders execute manual QA immediately with zero domain training using the turn-by-turn mock scripts.
+* **Instantaneous Test Synthesis**: Ingests sub-agent prompt instructions, tools, and runtime callbacks to automatically synthesize 12-case Sanity or 26-case Regression evaluation suites in a single command.
+* **Deterministic Test Credential Binding**: Eliminates manual credential lookup by automatically binding domain-valid test accounts (CLI phone, postcode, DOB, PNR, SSN, and mock holdings) to every scenario.
+* **Full Omnichannel Parity**: Evaluates Telephony Voice IVR and Digital Chat against unified business logic, security policies, and 5-pillar guardrails.
+* **Self-Healing Regression Suites**: Automatically upgrades security policies (LLV -> HLV), updates tool assertions, and injects verification turns whenever sub-agent codebase ASTs change, preserving audit lineage in versioned goldens.
 
 ---
 
@@ -421,7 +408,7 @@ project-chime/
 │   │   ├── introspector.py        # Codebase AST scanner & baseline goldens parser (YAML/XLSX)
 │   │   └── versioning.py          # GoldenVersionManager (v1_baseline, v2, audit ledger)
 │   ├── generators/
-│   │   ├── openxml_excel.py       # Zero-dependency native OpenXML streaming Excel generator
+│   │   ├── openxml_excel.py       # Zero-dependency native OpenXML streaming spreadsheet generator
 │   │   ├── scrapi_yaml.py         # Native cxas-scrapi SimulationEvals & Goldens YAML builder
 │   │   └── decisions_report.py    # Executive Decisions & Changes markdown report generator
 │   └── profiles/                  # Built-in industry vertical profiles
@@ -454,5 +441,5 @@ python3 -m unittest discover -s tests
 
 ## 👥 Authors & Attribution
 
-* **Sofia Mejia** (`sofiamejiamuro@google.com`) — Conversational AI Engineer, Google Cloud Customer Engagement Suite (CXAS) Delivery Team.
+* **Sofia Mejia** (`sofiamejiamuro@google.com`) — Conversational AI Consultant, Google Cloud Customer Engagement Suite (CXAS) Delivery Team.
 * **Google Cloud Conversational AI & Engineering Excellence**.

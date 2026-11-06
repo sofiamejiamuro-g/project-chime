@@ -265,7 +265,7 @@ def main():
     print(f"   • Total Test Cases:      {len(all_rows)}")
     print(f"   • Automated Simulations: {yaml_dir}/")
     print(f"   • Platform Goldens:      {goldens_dir}/ (Active & Version History)")
-    print(f"   • Manual QA Excel:       {excel_path}")
+    print(f"   • Manual QA Spreadsheet: {excel_path} (Google Sheets / OpenXML)")
     print(f"   • Decisions Report:      {decisions_report_path}\n")
 
 

@@ -3,7 +3,7 @@ name: chime
 description: >-
   Project CHIME: Conversational Harmonization for IVR & Messaging Evaluations for CXAS & cxas-scrapi.
   Automates continuous synchronization and generation of native cxas-scrapi SimulationEvals (evals/simulations/*.yaml),
-  Platform Goldens (evals/goldens/*.yaml), Decisions & Changes Audit Reports, and zero-context multi-tab Manual QA Suites (Excel .xlsx)
+  Platform Goldens (evals/goldens/*.yaml), Decisions & Changes Audit Reports, and zero-context multi-tab Manual QA Spreadsheet Suites (.xlsx / Google Sheets)
   across Sanity and Regression tiers for both Voice IVR and Digital Chat. Ingests client baseline goldens or dynamically synthesizes
   missing compositions, hydrates test rows with customer credentials, and generates turn-by-turn mock dialogues.
 ---
@@ -15,7 +15,7 @@ Project CHIME establishes an automated, omnichannel testing pipeline for Google 
 1. **Native `cxas-scrapi` SimulationEvals (`evals/simulations/*.yaml`)**: Ready for immediate execution with `cxas evals run` or CI/CD pipelines.
 2. **Native `cxas-scrapi` Platform Goldens (`evals/goldens/*.yaml`)**: Turn-by-turn deterministic evaluation suites with snapshot versioning (`v1_baseline`, `v2`, and cryptographic `history_<subagent>.json` ledger).
 3. **Decisions & Changes Audit Reports (`evals/reports/*_Decisions_Report.md`)**: Full architectural rationale for verification levels (HLV/LLV), 5-pillar guardrails, detected tool diffs, and priority distributions.
-4. **Zero-Context Manual QA Excel Workbooks (`evals/manual_qa/*.xlsx`)**: Dedicated per-channel tabs (Voice IVR & Digital Chat) with turn-by-turn mock dialogues, pass/fail logging, and pre-hydrated customer test credentials (CLI phone, postcode, password, holdings). Zero external dependencies (pure Python standard library OpenXML streaming).
+4. **Zero-Context Manual QA Spreadsheet Workbooks (`evals/manual_qa/*.xlsx`)**: Dedicated per-channel tabs (Voice IVR & Digital Chat) with turn-by-turn mock dialogues, pass/fail logging, and pre-hydrated customer test credentials (CLI phone, postcode, password, holdings). Zero external dependencies (pure Python standard library OpenXML streaming, natively importable into Google Sheets).
 
 ---
 
@@ -23,7 +23,7 @@ Project CHIME establishes an automated, omnichannel testing pipeline for Google 
 
 * **Zero-Context Human QA**: Testers never have to guess test accounts, search for active order numbers, or invent spoken dialogue turns. Every test row has exact turn-by-turn utterances and pre-hydrated test credentials.
 * **100% Cross-Customer & Multi-Vertical**: Decoupled from any single client schema. Includes built-in profiles for **Telecom**, **Banking**, **Travel / Airlines**, **Retail / E-Commerce**, and **Generic**, with full support for custom YAML/JSON manifests.
-* **Elimination of UAT False Failures**: Drops false failure rates from 38% to under 2% by pairing tests with real, verified credentials.
+* **Elimination of Credential Guesswork**: Eliminates manual credential lookups and downstream mock lookup failures by pairing tests with real, verified accounts.
 * **Code-to-QA Drift Immunity**: Self-heals stale goldens whenever sub-agent tools or authentication callbacks change in code.
 
 ---
@@ -37,7 +37,7 @@ chime --suite sanity --all --profile banking --app-dir ./cxas_app
 ```
 
 ### 2. Ingest Customer Baseline Goldens & Harmonize Regression Suite
-Ingests client goldens from an existing YAML or Excel matrix, fills missing slots with synthesized guardrails/fallbacks, and hydrates test accounts:
+Ingests client goldens from an existing YAML or Spreadsheet matrix, fills missing slots with synthesized guardrails/fallbacks, and hydrates test accounts:
 ```bash
 chime --suite regression --all \
   --profile travel \
@@ -66,7 +66,7 @@ cxas evals run --eval-file ./evals/simulations/sanity_simulations_techsetup.yaml
 When working with an AI coding assistant in Jetski or Gemini CLI, you can invoke Project CHIME naturally:
 - *"Run Project CHIME to generate the sanity suite for all subagents with cxas-scrapi compliance."*
 - *"Ingest our existing goldens from evals/goldens and synchronize the regression suite for techsetup using accounts.json."*
-- *"Generate the manual QA Excel workbook and decisions audit report for the billing subagent with hydrated customer credentials."*
+- *"Generate the manual QA spreadsheet workbook and decisions audit report for the billing subagent with hydrated customer credentials."*
 - *"Synchronize the banking subagent with the banking profile and export both simulation and platform goldens."*
 
 ---
