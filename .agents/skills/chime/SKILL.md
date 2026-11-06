@@ -55,7 +55,16 @@ chime --suite sanity --subagent techsetup --generate-goldens \
   --app-dir ./cxas_app
 ```
 
-### 4. Execute Generated Simulations in `cxas-scrapi`
+### 4. Fetch Test Accounts Live from REST API
+Retrieve pre-provisioned test accounts directly from a customer API endpoint:
+```bash
+chime --suite sanity --all \
+  --accounts-api https://tdm.staging.customer.com/v1/accounts \
+  --accounts-api-token "eyJhGciOiJIUzI1NiIsInR5cCI6..." \
+  --app-dir ./cxas_app
+```
+
+### 5. Execute Generated Simulations in `cxas-scrapi`
 ```bash
 cxas evals run --eval-file ./evals/simulations/sanity_simulations_techsetup.yaml
 ```

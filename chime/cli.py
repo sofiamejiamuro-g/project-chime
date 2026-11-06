@@ -37,8 +37,16 @@ def main():
                         help="Root directory of the CXAS application (containing agents/ or sub-agents)")
     parser.add_argument("--agents-dir", default=None,
                         help="Direct path to subagent directories")
+    parser.add_argument("--accounts-source", choices=["auto", "file", "api", "profile"], default="auto",
+                        help="Data hydration source mode: 'auto' (inferred), 'file' (document), 'api' (REST), 'profile' (built-in)")
     parser.add_argument("--accounts-file", default=None,
-                        help="Path to customer test account pool JSON/YAML (for Voice & Chat credential hydration)")
+                        help="Path to customer test account document (.xlsx, .csv, .tsv, .json, .yaml)")
+    parser.add_argument("--accounts-api", default=None,
+                        help="REST API endpoint URL to fetch live/mock test accounts dynamically")
+    parser.add_argument("--accounts-api-token", default=None,
+                        help="Bearer token or API key for --accounts-api")
+    parser.add_argument("--accounts-api-header", action="append", default=[],
+                        help="Custom HTTP header for --accounts-api in 'Key:Value' format (can be specified multiple times)")
     parser.add_argument("--goldens", default=None,
                         help="Path to baseline customer goldens file (.yaml/.xlsx) or directory")
     parser.add_argument("--generate-goldens", action="store_true",
@@ -112,6 +120,24 @@ def main():
             print(f"Error: Unknown subagent '{args.subagent}'. Available: {', '.join(m['key'] for m in subagents.values())}")
             sys.exit(1)
 
+    # Parse custom API headers if provided
+    api_headers = {}
+    for h in (args.accounts_api_header or []):
+        if ":" in h:
+            k, v = h.split(":", 1)
+            api_headers[k.strip()] = v.strip()
+
+    # 4. Initialize hydrator
+    hydrator = AccountHydrator(
+        accounts_path=args.accounts_file,
+        profile_name=args.profile,
+        hydration_config_path=args.hydration_config,
+        accounts_source=args.accounts_source,
+        api_url=args.accounts_api,
+        api_token=args.accounts_api_token,
+        api_headers=api_headers
+    )
+
     print(f"\n🔔 Project CHIME · Unified Voice IVR & Chat Simulation Engine")
     print(f"============================================================")
     print(f"Tier:               {args.suite.upper()}")
@@ -120,16 +146,9 @@ def main():
     print(f"Domain Profile:     {args.profile or 'Auto / Telecom'}")
     if args.hydration_config:
         print(f"Hydration Config:   {args.hydration_config}")
-    print(f"Accounts Pool:      {args.accounts_file or 'Default Synthetic Pool'}")
+    print(f"Accounts Source:    {hydrator.resolved_source}")
     print(f"Goldens Source:     {args.goldens or 'None (Autonomous Dynamic Synthesis)'}")
     print(f"Output Directory:   {args.output_dir}\n")
-
-    # 4. Initialize hydrator
-    hydrator = AccountHydrator(
-        accounts_path=args.accounts_file,
-        profile_name=args.profile,
-        hydration_config_path=args.hydration_config
-    )
 
     # 5. Process targets and generate suites
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

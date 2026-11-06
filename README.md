@@ -193,22 +193,34 @@ Switch industries with a single command flag:
 | **`retail`** | E-Commerce & Logistics | `order_id`, `customer_email`, `tracking` | *"Sure, my order number is ORD-992144 and my email is alex.miller@example.com."* | Web chat JWT, courier tracking | `track_order`, `process_return` |
 | **`generic`** | Enterprise Virtual Assistants | `account_id`, `user_id`, `email` | *"Sure, my account ID is ACC-GEN-001 and my security pass is GenericPass123!."* | Omnichannel session token | `check_status` |
 
-### 2. Arbitrary Customer Schemas (`--accounts-file`)
-Customers never need to reformat their data. CHIME accepts any JSON or YAML account pool, auto-discovers ID fields, formats summary cards, and dynamically maps all attributes into `cxas-scrapi` `session_parameters`:
+### 2. Flexible Document Ingestion (`--accounts-file`)
+Customers never need to reformat their data. CHIME natively ingests test account pools across all standard document and spreadsheet formats without requiring third-party libraries:
+* **Google Sheets & Spreadsheets (`.xlsx`)**: Reads rows directly via native OpenXML streaming. Row 1 defines column headers, and each row becomes a test account.
+* **Delimited Files (`.csv`, `.tsv`)**: Directly parses comma or tab-separated test registries.
+* **Structured Data (`.json`, `.yaml`)**: Directly loads arrays or dictionaries.
 
-```yaml
-# Example: Healthcare Patient Manifest (Arbitrary Keys)
-accounts:
-  - patient_id: "MED-99412"
-    mrn_number: "MRN-008129"
-    patient_name: "Eleanor Vance"
-    insurance_policy: "BlueCross-Optima-99"
-    primary_physician: "Dr. Sarah Adams"
-    department: "Cardiology"
-    tags: ["healthcare", "cardiology"]
+All customer columns (`account_number`, `mrn_number`, `dob`, `policy_id`, `tags`) are dynamically mapped into `cxas-scrapi` `session_parameters` without dropping custom fields:
+
+```csv
+account_id,cli_phone,postcode,products,tags
+ACC-001,07700900123,SW1A 1AA,Gigabit Fiber,techsetup
+ACC-002,07700900456,EC1A 1BB,Digital Stream,billing
 ```
 
-### 3. Custom Domain Profiles (`--hydration-config`)
+### 3. Dynamic REST API Ingestion (`--accounts-api`)
+For continuous integration environments connected to an enterprise Test Data Management (TDM) service, CHIME can fetch live or mock test accounts over HTTP/HTTPS at runtime:
+* Pass the endpoint URL via `--accounts-api <url>`.
+* Pass authentication via `--accounts-api-token <token>` or `--accounts-api-header "Authorization: Bearer <token>"`.
+* **Automatic Fallback Protection**: If the remote test API is unreachable or times out, CHIME safely falls back to a local document or domain profile to prevent CI/CD pipeline breakage.
+
+### 4. Explicit Source Selector (`--accounts-source`)
+Control how test accounts are retrieved with `--accounts-source`:
+* `auto` *(Default)*: Automatically infers the source based on provided flags (API if `--accounts-api` is passed, Document if `--accounts-file` is passed, or Profile).
+* `file`: Enforces loading strictly from `--accounts-file`.
+* `api`: Enforces fetching strictly from `--accounts-api`.
+* `profile`: Enforces using the built-in domain profile pool.
+
+### 5. Custom Domain Profiles (`--hydration-config`)
 Define entirely new industries (Healthcare, Government, Energy, Insurance) in simple YAML/JSON files without changing a single line of Python:
 ```yaml
 domain: healthcare
@@ -374,7 +386,19 @@ chime --suite sanity --subagent techsetup --generate-goldens \
 
 ---
 
-#### Command D: Execute Generated Simulations Headless in `cxas-scrapi`
+#### Command D: Fetch Test Accounts Live via REST API
+Retrieve pre-provisioned test accounts directly from a customer Test Data Management (TDM) or mock API service:
+```bash
+chime --suite sanity --all \
+  --accounts-api https://tdm.staging.customer.com/v1/accounts \
+  --accounts-api-token "eyJhGciOiJIUzI1NiIsInR5cCI6..." \
+  --output-dir ./evals \
+  --app-dir ./cxas_app
+```
+
+---
+
+#### Command E: Execute Generated Simulations Headless in `cxas-scrapi`
 Run the generated simulations through the official `cxas-scrapi` LLM-driven user conversation runner:
 ```bash
 cxas evals run --eval-file ./evals/simulations/sanity_simulations_customer_support.yaml

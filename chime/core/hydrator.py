@@ -1,11 +1,120 @@
 """Schema-Driven Omnichannel Data Hydration Engine for CXAS & Project CHIME."""
 
+import csv
 import json
 import os
 import re
+import urllib.request
+import xml.etree.ElementTree as ET
 import yaml
+import zipfile
 from typing import Dict, Any, List, Optional
 from chime.profiles import load_profile, list_available_profiles
+
+
+def _load_from_spreadsheet(path: str) -> List[Dict[str, Any]]:
+    """Loads accounts from an OpenXML spreadsheet (.xlsx / Google Sheets export)."""
+    if not zipfile.is_zipfile(path):
+        return []
+
+    try:
+        with zipfile.ZipFile(path, 'r') as z:
+            sst = []
+            if 'xl/sharedStrings.xml' in z.namelist():
+                s_tree = ET.fromstring(z.read('xl/sharedStrings.xml'))
+                for si in s_tree.findall('{http://schemas.openxmlformats.org/spreadsheetml/2006/main}si'):
+                    text = "".join(t.text for t in si.findall('.//{http://schemas.openxmlformats.org/spreadsheetml/2006/main}t') if t.text)
+                    sst.append(text)
+
+            target_path = None
+            for name in z.namelist():
+                if name.startswith('xl/worksheets/sheet') and name.endswith('.xml'):
+                    target_path = name
+                    break
+
+            if not target_path:
+                return []
+
+            sheet_tree = ET.fromstring(z.read(target_path))
+            ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+
+            rows_data = []
+            for r in sheet_tree.findall('.//ns:row', ns):
+                row_dict = {}
+                for c in r.findall('ns:c', ns):
+                    ref = c.attrib.get('r', '')
+                    col_match = re.match(r'([A-Z]+)', ref)
+                    if not col_match:
+                        continue
+                    col_letter = col_match.group(1)
+                    t = c.attrib.get('t')
+                    val = ''
+                    if t == 'inlineStr':
+                        is_elem = c.find('ns:is', ns)
+                        if is_elem is not None and is_elem.find('ns:t', ns) is not None:
+                            val = is_elem.find('ns:t', ns).text or ''
+                    else:
+                        v = c.find('ns:v', ns)
+                        if v is not None and v.text:
+                            try:
+                                val = sst[int(v.text)] if t == 's' else v.text
+                            except Exception:
+                                val = v.text
+                    row_dict[col_letter] = val.strip()
+                if row_dict:
+                    rows_data.append(row_dict)
+
+            if not rows_data or len(rows_data) < 2:
+                return []
+
+            header_row = rows_data[0]
+            col_to_key = {}
+            for col_letter, header_val in header_row.items():
+                if header_val:
+                    clean_k = re.sub(r'[^a-zA-Z0-9_]+', '_', header_val.strip().lower()).strip('_')
+                    col_to_key[col_letter] = clean_k
+
+            accounts = []
+            for row_dict in rows_data[1:]:
+                acc = {}
+                for col_letter, key_name in col_to_key.items():
+                    acc[key_name] = row_dict.get(col_letter, "")
+
+                if "tags" in acc and isinstance(acc["tags"], str) and acc["tags"]:
+                    acc["tags"] = [t.strip() for t in acc["tags"].split(",") if t.strip()]
+                if "products" in acc and isinstance(acc["products"], str) and acc["products"]:
+                    acc["products"] = [p.strip() for p in acc["products"].split(",") if p.strip()]
+
+                if any(v for k, v in acc.items() if k):
+                    accounts.append(acc)
+
+            return accounts
+    except Exception as e:
+        print(f"Notice: Failed to read spreadsheet '{path}': {e}")
+        return []
+
+
+def _load_from_csv(path: str, delimiter: str = ',') -> List[Dict[str, Any]]:
+    """Loads accounts from a CSV or TSV file."""
+    accounts = []
+    try:
+        with open(path, 'r', encoding='utf-8', errors='replace') as f:
+            reader = csv.DictReader(f, delimiter=delimiter)
+            for r in reader:
+                clean_row = {}
+                for k, v in r.items():
+                    if k is not None:
+                        clean_k = re.sub(r'[^a-zA-Z0-9_]+', '_', k.strip().lower()).strip('_')
+                        clean_row[clean_k] = v.strip() if isinstance(v, str) else v
+                if "tags" in clean_row and isinstance(clean_row["tags"], str) and clean_row["tags"]:
+                    clean_row["tags"] = [t.strip() for t in clean_row["tags"].split(",") if t.strip()]
+                if "products" in clean_row and isinstance(clean_row["products"], str) and clean_row["products"]:
+                    clean_row["products"] = [p.strip() for p in clean_row["products"].split(",") if p.strip()]
+                if clean_row:
+                    accounts.append(clean_row)
+    except Exception as e:
+        print(f"Notice: Failed to read delimited document '{path}': {e}")
+    return accounts
 
 
 class AccountHydrator:
@@ -15,8 +124,19 @@ class AccountHydrator:
         self,
         accounts_path: Optional[str] = None,
         profile_name: Optional[str] = None,
-        hydration_config_path: Optional[str] = None
+        hydration_config_path: Optional[str] = None,
+        accounts_source: str = "auto",
+        api_url: Optional[str] = None,
+        api_token: Optional[str] = None,
+        api_headers: Optional[Dict[str, str]] = None
     ):
+        self.accounts_source = accounts_source.lower().strip() if accounts_source else "auto"
+        self.api_url = api_url
+        self.api_token = api_token
+        self.api_headers = api_headers or {}
+        self.accounts_path = accounts_path
+        self.resolved_source = "profile"
+
         # 1. Load domain profile / hydration config
         if hydration_config_path and os.path.exists(hydration_config_path):
             self.profile = load_profile(hydration_config_path)
@@ -30,24 +150,118 @@ class AccountHydrator:
         self.channel_defaults = self.profile.get("channel_defaults", {})
         self.mock_tools_catalog = self.profile.get("mock_tools", {})
 
-        # 2. Load account pool
+        # 2. Retrieve account pool based on accounts_source and inputs
         self.accounts: List[Dict[str, Any]] = []
-        if accounts_path and os.path.exists(accounts_path):
-            self.load_accounts(accounts_path)
-        else:
-            # Fallback to profile sample accounts
+
+        # Mode A: Explicit profile
+        if self.accounts_source == "profile":
             self.accounts = self.profile.get("sample_accounts", [])
-            if not self.accounts:
-                fallback_profile = load_profile("telecom")
-                self.accounts = fallback_profile.get("sample_accounts", [])
+            self.resolved_source = f"profile ({self.domain})"
+
+        # Mode B: Explicit API or Auto with api_url provided
+        elif self.accounts_source == "api" or (self.accounts_source == "auto" and self.api_url):
+            if not self.api_url:
+                raise ValueError("Accounts source set to 'api' but no --accounts-api URL was provided.")
+            try:
+                self.accounts = self.fetch_accounts_from_api(self.api_url, self.api_token, self.api_headers)
+                self.resolved_source = f"API ({self.api_url})"
+            except Exception as e:
+                print(f"Notice: Failed to fetch accounts from API '{self.api_url}': {e}.")
+                if self.accounts_source == "api":
+                    raise
+                if self.accounts_path and os.path.exists(self.accounts_path):
+                    self.load_accounts(self.accounts_path)
+                    self.resolved_source = f"document fallback ({self.accounts_path})"
+                else:
+                    self.accounts = self.profile.get("sample_accounts", [])
+                    self.resolved_source = f"profile fallback ({self.domain})"
+
+        # Mode C: Explicit File or Auto with accounts_path provided
+        elif self.accounts_source == "file" or (self.accounts_source == "auto" and self.accounts_path):
+            if not self.accounts_path or not os.path.exists(self.accounts_path):
+                if self.accounts_source == "file":
+                    raise FileNotFoundError(f"Accounts source set to 'file' but '{self.accounts_path}' was not found.")
+                else:
+                    self.accounts = self.profile.get("sample_accounts", [])
+                    self.resolved_source = f"profile ({self.domain})"
+            else:
+                self.load_accounts(self.accounts_path)
+                self.resolved_source = f"document ({self.accounts_path})"
+
+        # Mode D: Fallback to profile
+        else:
+            self.accounts = self.profile.get("sample_accounts", [])
+            self.resolved_source = f"profile ({self.domain})"
+
+        if not self.accounts:
+            fallback_profile = load_profile("telecom")
+            self.accounts = fallback_profile.get("sample_accounts", [])
+            self.resolved_source = "profile fallback (telecom)"
+
+    def fetch_accounts_from_api(
+        self,
+        api_url: str,
+        api_token: Optional[str] = None,
+        api_headers: Optional[Dict[str, str]] = None
+    ) -> List[Dict[str, Any]]:
+        """Fetches live/mock test accounts dynamically from a customer REST API endpoint."""
+        req_headers = {
+            "User-Agent": "Project-CHIME-Hydrator/1.0",
+            "Accept": "application/json"
+        }
+        if api_token:
+            req_headers["Authorization"] = f"Bearer {api_token}"
+        if api_headers:
+            req_headers.update(api_headers)
+
+        req = urllib.request.Request(api_url, headers=req_headers, method="GET")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw_body = resp.read().decode("utf-8")
+            data = json.loads(raw_body)
+
+        parsed_accounts: List[Dict[str, Any]] = []
+        if isinstance(data, list):
+            parsed_accounts = data
+        elif isinstance(data, dict):
+            if "accounts" in data and isinstance(data["accounts"], list):
+                parsed_accounts = data["accounts"]
+            elif "data" in data and isinstance(data["data"], list):
+                parsed_accounts = data["data"]
+            elif "results" in data and isinstance(data["results"], list):
+                parsed_accounts = data["results"]
+            else:
+                parsed_accounts = [data]
+
+        return parsed_accounts
 
     def load_accounts(self, path: str):
-        """Loads accounts from any customer JSON or YAML file supporting arbitrary keys."""
+        """Loads accounts from JSON, YAML, CSV, TSV, or OpenXML Spreadsheet (.xlsx)."""
+        clean_path = path.strip()
+        lower_path = clean_path.lower()
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                if path.endswith(".yaml") or path.endswith(".yml"):
+            # 1. OpenXML Spreadsheet (.xlsx / Google Sheets download)
+            if lower_path.endswith(".xlsx"):
+                data = _load_from_spreadsheet(clean_path)
+                if data:
+                    self.accounts = data
+                    return
+
+            # 2. Delimited CSV / TSV
+            elif lower_path.endswith(".csv") or lower_path.endswith(".tsv"):
+                delim = "\t" if lower_path.endswith(".tsv") else ","
+                data = _load_from_csv(clean_path, delimiter=delim)
+                if data:
+                    self.accounts = data
+                    return
+
+            # 3. YAML
+            elif lower_path.endswith(".yaml") or lower_path.endswith(".yml"):
+                with open(clean_path, "r", encoding="utf-8") as f:
                     data = yaml.safe_load(f)
-                else:
+
+            # 4. JSON
+            else:
+                with open(clean_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
 
             if isinstance(data, list):
@@ -55,8 +269,9 @@ class AccountHydrator:
             elif isinstance(data, dict):
                 if "accounts" in data and isinstance(data["accounts"], list):
                     self.accounts = data["accounts"]
+                elif "data" in data and isinstance(data["data"], list):
+                    self.accounts = data["data"]
                 else:
-                    # Flatten dictionary of named profiles
                     flattened = []
                     for k, v in data.items():
                         if isinstance(v, dict):
@@ -66,7 +281,7 @@ class AccountHydrator:
                             flattened.append(entry)
                     self.accounts = flattened if flattened else self.profile.get("sample_accounts", [])
         except Exception as e:
-            print(f"Notice: Could not parse accounts file '{path}': {e}. Using domain profile sample pool.")
+            print(f"Notice: Could not parse accounts document '{clean_path}': {e}. Using domain profile sample pool.")
             self.accounts = self.profile.get("sample_accounts", [])
 
     def get_account_for_test(

@@ -279,6 +279,117 @@ class TestChimeCore(unittest.TestCase):
             if os.path.exists(custom_path):
                 os.remove(custom_path)
 
+    def test_csv_and_tsv_hydration(self):
+        import tempfile
+        import csv
+
+        # 1. Test CSV
+        with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False) as f:
+            writer = csv.writer(f)
+            writer.writerow(["account_id", "phone_number", "billing_zip", "tags", "products"])
+            writer.writerow(["ACC-CSV-01", "+14155550199", "94107", "techsetup, broadband", "Gigabit Plan"])
+            csv_path = f.name
+
+        # 2. Test TSV
+        with tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False) as f:
+            writer = csv.writer(f, delimiter="\t")
+            writer.writerow(["account_id", "phone_number", "billing_zip", "tags"])
+            writer.writerow(["ACC-TSV-01", "+12125550188", "10002", "billing"])
+            tsv_path = f.name
+
+        try:
+            # Load CSV
+            csv_hydrator = AccountHydrator(accounts_path=csv_path, accounts_source="file")
+            acc_csv = csv_hydrator.get_account_for_test("techsetup", "Happy Path")
+            self.assertEqual(acc_csv["account_id"], "ACC-CSV-01")
+            self.assertEqual(acc_csv["phone_number"], "+14155550199")
+            self.assertEqual(acc_csv["billing_zip"], "94107")
+            self.assertIn("techsetup", acc_csv["tags"])
+
+            # Load TSV
+            tsv_hydrator = AccountHydrator(accounts_path=tsv_path, accounts_source="file")
+            acc_tsv = tsv_hydrator.get_account_for_test("billing", "Happy Path")
+            self.assertEqual(acc_tsv["account_id"], "ACC-TSV-01")
+            self.assertEqual(acc_tsv["phone_number"], "+12125550188")
+        finally:
+            if os.path.exists(csv_path):
+                os.remove(csv_path)
+            if os.path.exists(tsv_path):
+                os.remove(tsv_path)
+
+    def test_spreadsheet_xlsx_hydration(self):
+        import tempfile
+        from chime.generators.openxml_excel import generate_manual_qa_excel_suite
+
+        # Generate a small valid .xlsx using chime's own zero-dependency OpenXML engine
+        headers = ["account_id", "cli_phone", "postcode", "tags", "products"]
+        row1 = ["ACC-XLSX-99", "07700900999", "EC1A 1AA", "techsetup, wifi", "Pro Fiber 1000"]
+        test_xlsx = tempfile.mktemp(suffix=".xlsx")
+
+        generate_manual_qa_excel_suite(
+            output_xlsx_path=test_xlsx,
+            suite_tier="test",
+            app_title="Test App",
+            timestamp="2026-11-06",
+            sheets_dict={"Accounts": [headers, row1]}
+        )
+
+        try:
+            xlsx_hydrator = AccountHydrator(accounts_path=test_xlsx, accounts_source="file")
+            acc = xlsx_hydrator.get_account_for_test("techsetup", "Happy Path")
+            self.assertEqual(acc["account_id"], "ACC-XLSX-99")
+            self.assertEqual(acc["cli_phone"], "07700900999")
+            self.assertEqual(acc["postcode"], "EC1A 1AA")
+            self.assertIn("techsetup", acc["tags"])
+        finally:
+            if os.path.exists(test_xlsx):
+                os.remove(test_xlsx)
+
+    def test_api_hydration_and_fallback(self):
+        from unittest.mock import patch, MagicMock
+        import io
+        import json
+        import urllib.error
+
+        mock_payload = {
+            "accounts": [
+                {
+                    "account_id": "ACC-API-500",
+                    "cli_phone": "+18005559900",
+                    "postcode": "90210",
+                    "tags": ["api_test", "techsetup"]
+                }
+            ]
+        }
+
+        # 1. Test successful API fetch
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps(mock_payload).encode("utf-8")
+        mock_resp.__enter__.return_value = mock_resp
+
+        with patch("urllib.request.urlopen", return_value=mock_resp):
+            api_hydrator = AccountHydrator(
+                api_url="https://testdata.customer.internal/v1/accounts",
+                api_token="test_bearer_token",
+                accounts_source="api"
+            )
+            self.assertIn("API", api_hydrator.resolved_source)
+            acc = api_hydrator.get_account_for_test("techsetup", "Happy Path")
+            self.assertEqual(acc["account_id"], "ACC-API-500")
+            self.assertEqual(acc["cli_phone"], "+18005559900")
+
+        # 2. Test API fallback when offline in 'auto' mode
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("Network Unreachable")):
+            fallback_hydrator = AccountHydrator(
+                api_url="https://offline.api.internal/v1/accounts",
+                accounts_source="auto",
+                profile_name="telecom"
+            )
+            self.assertIn("profile fallback", fallback_hydrator.resolved_source)
+            # Should have fallback telecom account
+            acc_fb = fallback_hydrator.get_account_for_test("techsetup", "Happy Path")
+            self.assertTrue(len(acc_fb["cli_phone"]) > 0)
+
 
 if __name__ == "__main__":
     unittest.main()
