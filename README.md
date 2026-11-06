@@ -285,7 +285,12 @@ pip install -e .
 ### 2. Walkthrough: Common Commands & Generated Results
 
 #### Command A: Run Sanity Evaluation Suite (Fast CI Gate)
-Generates 12 mathematically distributed test cases per sub-agent using the Banking profile:
+Generates 12 mathematically distributed test cases per sub-agent. You can run directly against the included self-contained sample app (`./sample_cxas_app`):
+```bash
+chime --suite sanity --all --app-dir ./sample_cxas_app --output-dir ./evals
+```
+
+Or target your own CXAS application with any profile (e.g. `banking`):
 ```bash
 chime --suite sanity --all --profile banking --output-dir ./evals --app-dir ./cxas_app
 ```
@@ -442,8 +447,14 @@ project-chime/
 │       ├── travel.json            # Travel profile (PNR, booking ref, flight number, seat)
 │       ├── retail.json            # Retail profile (order_id, email, tracking, courier)
 │       └── generic.json           # Generic virtual assistant profile
+├── sample_cxas_app/               # Ready-to-run self-contained CXAS application for instant testing
+│   ├── app.json                   # CXAS application configuration
+│   ├── manifest.json              # Subagent manifest & tool bindings
+│   └── agents/                    # Subagents with instructions and OpenAPI tools
+│       ├── billing/               # Billing subagent (lookup_invoice, process_dtmf_payment)
+│       └── techsetup/             # Tech setup subagent (diagnose_line, reboot_router)
 ├── tests/
-│   └── test_chime.py              # 13 comprehensive unit tests (Scrapi, OpenXML, Hydration)
+│   └── test_chime.py              # 16 comprehensive unit tests (Scrapi, OpenXML, Hydration)
 ├── .agents/skills/chime/
 │   └── SKILL.md                   # Native Jetski / Gemini CLI skill definition
 ├── pyproject.toml                 # Package definition with chime CLI executable

@@ -31,8 +31,12 @@ Project CHIME establishes an automated, omnichannel testing pipeline for Google 
 ## 🚀 CLI Commands
 
 ### 1. Generate Sanity Suite (All Sub-Agents)
-Generates 12 test cases per sub-agent (5 Happy Paths, 1 Fallback, 1 Escalation, 5 Guardrails) with P0/P2 priorities:
+Generates 12 test cases per sub-agent (5 Happy Paths, 1 Fallback, 1 Escalation, 5 Guardrails) with P0/P2 priorities. Runs against `./sample_cxas_app` or any CXAS application:
 ```bash
+# Out-of-the-box run using the included sample app
+chime --suite sanity --all --app-dir ./sample_cxas_app
+
+# Or against a custom application with a specific domain profile
 chime --suite sanity --all --profile banking --app-dir ./cxas_app
 ```
 
