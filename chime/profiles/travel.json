@@ -1,0 +1,71 @@
+{
+  "domain": "travel",
+  "display_label": "Airlines & Travel Management",
+  "primary_identifiers": ["pnr", "booking_reference", "frequent_flyer_id", "e_ticket_number"],
+  "verification": {
+    "llv": ["last_name", "flight_date"],
+    "hlv": ["passport_last_4", "one_time_passcode", "credit_card_last_4"]
+  },
+  "summary_template": "PNR: {pnr} | Passenger: {last_name} | Flight: {flight_number} | Seat: {seat_assignment} | Status: {flight_status}",
+  "channel_defaults": {
+    "voice": {
+      "dnis": "+18005553599",
+      "dtmf_pnr": "9921"
+    },
+    "chat": {
+      "platform": "fly_airline_android",
+      "auth_type": "pnr_last_name"
+    }
+  },
+  "mock_tools": {
+    "get_flight_status": {
+      "flight_number": "BA209",
+      "status": "ON_TIME",
+      "gate": "B22",
+      "departure": "14:30",
+      "arrival": "17:45"
+    },
+    "lookup_reservation": {
+      "pnr": "XY89A2",
+      "passenger": "Jane Smith",
+      "class": "Business Club World",
+      "baggage_allowance_pieces": 2
+    }
+  },
+  "sample_accounts": [
+    {
+      "account_id": "PNR-XY89A2",
+      "pnr": "XY89A2",
+      "booking_reference": "XY89A2",
+      "last_name": "Smith",
+      "first_name": "Jane",
+      "phone_number": "+14155559021",
+      "flight_number": "BA209",
+      "flight_date": "2026-11-15",
+      "flight_status": "Confirmed / On Schedule",
+      "seat_assignment": "14B (Aisle)",
+      "passport_last_4": "8819",
+      "one_time_passcode": "662109",
+      "ff_tier": "Executive Gold",
+      "products": ["Business Class LHR-SFO", "Lounge Access Pass"],
+      "tags": ["travel", "flights", "reservations", "voice_ivr", "chat"]
+    },
+    {
+      "account_id": "PNR-DL4401",
+      "pnr": "DL4401",
+      "booking_reference": "DL4401",
+      "last_name": "Garcia",
+      "first_name": "Carlos",
+      "phone_number": "+13055554311",
+      "flight_number": "AA1102",
+      "flight_date": "2026-11-20",
+      "flight_status": "Delayed 45 Mins / Gate Change",
+      "seat_assignment": "22C (Window)",
+      "passport_last_4": "4102",
+      "one_time_passcode": "912440",
+      "ff_tier": "Silver Member",
+      "products": ["Main Cabin MIA-JFK"],
+      "tags": ["travel", "delays", "baggage", "voice_ivr", "chat"]
+    }
+  ]
+}

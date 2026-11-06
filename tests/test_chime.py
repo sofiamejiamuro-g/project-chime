@@ -204,6 +204,81 @@ class TestChimeCore(unittest.TestCase):
             self.assertIn("xl/sharedStrings.xml", z.namelist())
         os.remove(test_out)
 
+    def test_domain_profiles_loader(self):
+        from chime.profiles import list_available_profiles, load_profile
+        profiles = list_available_profiles()
+        self.assertIn("telecom", profiles)
+        self.assertIn("banking", profiles)
+        self.assertIn("travel", profiles)
+        self.assertIn("retail", profiles)
+        self.assertIn("generic", profiles)
+
+        banking_p = load_profile("banking")
+        self.assertEqual(banking_p.get("domain"), "banking")
+        self.assertIn("account_number", banking_p.get("primary_identifiers", []))
+
+        travel_p = load_profile("travel")
+        self.assertEqual(travel_p.get("domain"), "travel")
+        self.assertIn("pnr", travel_p.get("primary_identifiers", []))
+
+    def test_banking_profile_hydration(self):
+        bank_hydrator = AccountHydrator(profile_name="banking")
+        acc = bank_hydrator.get_account_for_test("banking", "Happy Path", auth_required=True)
+        self.assertIn("account_number", acc)
+        self.assertIn("ssn_last_4", acc)
+        self.assertIn("dob", acc)
+        self.assertIn("available_balance", acc)
+        self.assertIn("account number is", acc["verification_dialogue_turn"])
+        self.assertIn("get_account_balance", acc["mock_tools"])
+
+    def test_travel_profile_hydration(self):
+        travel_hydrator = AccountHydrator(profile_name="travel")
+        acc = travel_hydrator.get_account_for_test("travel", "Happy Path", auth_required=True)
+        self.assertIn("pnr", acc)
+        self.assertIn("flight_number", acc)
+        self.assertIn("seat_assignment", acc)
+        self.assertIn("booking reference is", acc["verification_dialogue_turn"])
+        self.assertIn("get_flight_status", acc["mock_tools"])
+
+    def test_custom_manifest_hydration(self):
+        import tempfile
+        import json
+        from chime.generators.scrapi_yaml import extract_session_parameters
+
+        # Create temporary custom healthcare manifest
+        custom_data = {
+            "accounts": [
+                {
+                    "patient_id": "MED-99412",
+                    "mrn_number": "MRN-008129",
+                    "patient_name": "Eleanor Vance",
+                    "insurance_policy": "BlueCross-Optima-99",
+                    "primary_physician": "Dr. Sarah Adams",
+                    "department": "Cardiology",
+                    "tags": ["healthcare", "cardiology"]
+                }
+            ]
+        }
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump(custom_data, f)
+            custom_path = f.name
+
+        try:
+            custom_hydrator = AccountHydrator(accounts_path=custom_path, profile_name="generic")
+            acc = custom_hydrator.get_account_for_test("cardiology", "Happy Path", auth_required=True)
+            self.assertEqual(acc.get("patient_id"), "MED-99412")
+            self.assertEqual(acc.get("insurance_policy"), "BlueCross-Optima-99")
+            self.assertIn("Patient Id: MED-99412", acc["formatted_summary"])
+
+            # Verify session parameters dynamically extracts all custom fields for scrapi
+            sess_params = extract_session_parameters(acc)
+            self.assertEqual(sess_params["patient_id"], "MED-99412")
+            self.assertEqual(sess_params["insurance_policy"], "BlueCross-Optima-99")
+            self.assertEqual(sess_params["primary_physician"], "Dr. Sarah Adams")
+        finally:
+            if os.path.exists(custom_path):
+                os.remove(custom_path)
+
 
 if __name__ == "__main__":
     unittest.main()

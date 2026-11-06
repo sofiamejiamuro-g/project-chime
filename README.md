@@ -67,17 +67,21 @@ pip install -e .
 
 ### 2. Run Single-Command Test Synchronization
 ```bash
-# Generate Sanity test suites for all subagents in any CXAS app
-chime --suite sanity --all --app-dir /path/to/cxas_app
+# Generate Sanity test suites with Banking domain profile
+chime --suite sanity --all --profile banking --app-dir /path/to/cxas_app
 
-# Ingest client baseline goldens and harmonize Regression test suite
+# Ingest client baseline goldens and harmonize Regression test suite with custom profile
 chime --suite regression --all \
   --goldens /path/to/golden_evals \
-  --accounts-file ./configs/accounts.example.json \
+  --profile travel \
+  --accounts-file ./configs/passengers.json \
   --app-dir /path/to/cxas_app
 
-# Generate both Simulations, Platform Goldens, Excel Workbook & Decisions Report
-chime --suite sanity --subagent techsetup --generate-goldens --app-dir /path/to/cxas_app
+# Run with custom domain schema definition
+chime --suite sanity --subagent techsetup --generate-goldens \
+  --hydration-config ./configs/healthcare_profile.yaml \
+  --accounts-file ./configs/patients.yaml \
+  --app-dir /path/to/cxas_app
 ```
 
 ### 3. Run Headless Automated Evals with `cxas-scrapi`
@@ -87,35 +91,46 @@ cxas evals run --eval-file ./evals/simulations/sanity_simulations_techsetup.yaml
 
 ---
 
-## 🔐 Customer Test Account Manifest (`accounts.json`)
+## 🔐 Schema-Driven Data Hydration (`chime/core/hydrator.py`)
 
-To eliminate tester guesswork during live telephony IVR calls and chat sessions, provide a JSON/YAML manifest:
+Project CHIME features a **100% customizable, schema-driven data hydration engine** that eliminates tester guesswork during live telephony IVR calls and digital chat sessions.
 
-```json
-{
-  "accounts": [
-    {
-      "account_id": "ACC-TEL-001",
-      "cli_phone": "+14155552671",
-      "postcode": "94105",
-      "security_password": "TelecomSecure123!",
-      "chat_user_id": "usr_tel_001",
-      "products": ["Gigabit Fiber Broadband", "Digital Stream Box"],
-      "billing_status": "Current",
-      "tags": ["techsetup", "broadband", "voice_ivr", "chat"]
-    }
-  ]
-}
+### 1. Built-in Industry Profiles (`--profile`)
+Specify a domain profile to automatically adapt verification turns, summary cards, telephony DNIS/DTMF, and mock tools:
+* `--profile telecom` (Default): CLI phone, postcode, broadband line status, router diagnostics.
+* `--profile banking`: Account number, SSN last 4, DOB, PIN, balances, KYC status.
+* `--profile travel`: PNR / booking reference, passenger name, flight number, seat assignment, passport last 4.
+* `--profile retail`: Order ID, customer email, courier, tracking code, delivery status.
+* `--profile generic`: Flexible account ID, user ID, status, and credentials.
+
+### 2. Arbitrary Customer Schemas (`--accounts-file`)
+Customers can pass any arbitrary JSON or YAML test pool without dropping custom fields. All domain keys are dynamically mapped to `session_parameters` for `cxas-scrapi`:
+
+```yaml
+accounts:
+  - patient_id: "MED-99412"
+    mrn_number: "MRN-008129"
+    patient_name: "Eleanor Vance"
+    insurance_policy: "BlueCross-Optima-99"
+    primary_physician: "Dr. Sarah Adams"
+    tags: ["healthcare", "cardiology"]
 ```
 
----
+### 3. Custom Domain Profiles (`--hydration-config`)
+Create a custom YAML/JSON profile defining summary templates, verification rules, channel defaults, and mock tool catalogs:
 
-## 🌍 Client-Agnostic Portability
-
-Project CHIME is completely decoupled from any single customer codebase:
-* **Telecom**: Tests line diagnostics, router reboot prompts, and DTMF card payments.
-* **Banking**: Tests balance inquiries, fraud alerts, and high-level verification (HLV).
-* **Retail**: Tests order tracking, delivery rescheduling, and returns.
+```yaml
+domain: healthcare
+display_label: "Hospital Patient Care"
+primary_identifiers: [patient_id, mrn_number]
+summary_template: "Patient: {patient_name} | MRN: {mrn_number} | Ins: {insurance_policy}"
+verification:
+  llv: [patient_name, dob]
+  hlv: [mrn_number, ssn_last_4]
+channel_defaults:
+  voice: { dnis: "+18005559090" }
+  chat: { platform: "mychart_portal" }
+```
 
 ---
 

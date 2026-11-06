@@ -1,0 +1,50 @@
+{
+  "domain": "retail",
+  "display_label": "E-Commerce & Order Fulfillment",
+  "primary_identifiers": ["order_id", "order_number", "customer_email", "tracking_number"],
+  "verification": {
+    "llv": ["billing_zip", "customer_email"],
+    "hlv": ["billing_address_number", "one_time_passcode"]
+  },
+  "summary_template": "Order: {order_id} | Email: {customer_email} | Item: {item_name} | Delivery: {delivery_status} | Courier: {courier_name}",
+  "channel_defaults": {
+    "voice": {
+      "dnis": "+18005558832"
+    },
+    "chat": {
+      "platform": "shopify_web_chat"
+    }
+  },
+  "mock_tools": {
+    "track_order": {
+      "order_id": "ORD-992144",
+      "status": "OUT_FOR_DELIVERY",
+      "carrier": "FedEx Express",
+      "tracking_code": "FDX-774910283",
+      "estimated_delivery": "Today by 5:00 PM"
+    },
+    "process_return": {
+      "eligible_for_return": true,
+      "return_label_url": "https://returns.store.example/label/ORD-992144.pdf",
+      "refund_estimate": 89.99
+    }
+  },
+  "sample_accounts": [
+    {
+      "account_id": "ORD-992144",
+      "order_id": "ORD-992144",
+      "order_number": "ORD-992144",
+      "customer_email": "alex.miller@example.com",
+      "phone_number": "+13125554321",
+      "billing_zip": "60601",
+      "billing_address_number": "450",
+      "item_name": "Noise-Cancelling Wireless Headphones Pro",
+      "delivery_status": "Out for Delivery",
+      "courier_name": "FedEx",
+      "tracking_number": "FDX-774910283",
+      "one_time_passcode": "551920",
+      "products": ["Electronics Pro Care Warranty"],
+      "tags": ["retail", "orders", "returns", "delivery", "voice_ivr", "chat"]
+    }
+  ]
+}

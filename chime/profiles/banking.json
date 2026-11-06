@@ -1,0 +1,65 @@
+{
+  "domain": "banking",
+  "display_label": "Retail & Commercial Banking",
+  "primary_identifiers": ["account_number", "customer_id", "member_id"],
+  "verification": {
+    "llv": ["phone_number", "billing_zip"],
+    "hlv": ["ssn_last_4", "dob", "security_pin", "one_time_passcode"]
+  },
+  "summary_template": "Acc: {account_number} | SSN4: {ssn_last_4} | DOB: {dob} | Holdings: [{products}] | Balance: {available_balance}",
+  "channel_defaults": {
+    "voice": {
+      "dnis": "+18005552265",
+      "dtmf_pin": "5821"
+    },
+    "chat": {
+      "platform": "mobile_banking_ios",
+      "auth_type": "biometric_oauth2"
+    }
+  },
+  "mock_tools": {
+    "get_account_balance": {
+      "available_balance": 3450.25,
+      "ledger_balance": 3500.00,
+      "currency": "USD",
+      "status": "ACTIVE"
+    },
+    "lookup_customer": {
+      "customer_tier": "Platinum Checking",
+      "kyc_verified": true,
+      "fraud_alerts": 0
+    }
+  },
+  "sample_accounts": [
+    {
+      "account_id": "ACC-BNK-1001",
+      "account_number": "9820598207",
+      "customer_id": "CUST-4444444",
+      "phone_number": "+14155552671",
+      "billing_zip": "94105",
+      "dob": "1988-04-12",
+      "ssn_last_4": "4412",
+      "security_pin": "5821",
+      "one_time_passcode": "829103",
+      "available_balance": "$3,450.25",
+      "products": ["Platinum Checking", "High-Yield Savings"],
+      "account_status": "Verified / Good Standing",
+      "tags": ["banking", "accounts", "transfers", "voice_ivr", "chat"]
+    },
+    {
+      "account_id": "ACC-BNK-1002",
+      "account_number": "7718290312",
+      "customer_id": "CUST-8888888",
+      "phone_number": "+12125559812",
+      "billing_zip": "10001",
+      "dob": "1975-11-23",
+      "ssn_last_4": "8921",
+      "security_pin": "9934",
+      "one_time_passcode": "339102",
+      "available_balance": "$12,890.00",
+      "products": ["Wealth Management", "Premier Credit Card"],
+      "account_status": "Fraud Flag / Suspicious Activity Review",
+      "tags": ["fraud", "cards", "security", "voice_ivr", "chat"]
+    }
+  ]
+}

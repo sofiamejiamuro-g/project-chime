@@ -1,0 +1,37 @@
+{
+  "domain": "generic",
+  "display_label": "General Conversational Assistant",
+  "primary_identifiers": ["account_id", "user_id", "email", "phone"],
+  "verification": {
+    "llv": ["user_id", "email"],
+    "hlv": ["security_password", "one_time_passcode"]
+  },
+  "summary_template": "ID: {account_id} | User: {user_id} | Status: {status}",
+  "channel_defaults": {
+    "voice": {
+      "dnis": "+18005550100"
+    },
+    "chat": {
+      "platform": "omnichannel_web_chat"
+    }
+  },
+  "mock_tools": {
+    "check_status": {
+      "status": "HEALTHY",
+      "updated_at": "2026-11-06T00:00:00Z"
+    }
+  },
+  "sample_accounts": [
+    {
+      "account_id": "ACC-GEN-001",
+      "user_id": "user_generic_01",
+      "email": "user@example.com",
+      "phone": "+14155550100",
+      "status": "Active / Verified",
+      "security_password": "GenericPass123!",
+      "one_time_passcode": "123456",
+      "products": ["Core Subscription Service"],
+      "tags": ["support", "general", "voice_ivr", "chat"]
+    }
+  ]
+}

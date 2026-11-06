@@ -60,18 +60,26 @@ def build_multi_turn_dialogue(
     cli = account_data.get("cli_phone", "07700900123")
     postcode = account_data.get("postcode", "SW1A 1AA")
     pwd = account_data.get("security_password", "BlueStar77!")
-    holdings = account_data.get("products", ["Broadband Ultrafast"])
-    holdings_str = ", ".join(holdings) if isinstance(holdings, list) else str(holdings)
+    holdings = (
+        account_data.get("products") or
+        account_data.get("accounts") or
+        account_data.get("flight_number") or
+        account_data.get("item_name") or
+        account_data.get("plan_name") or
+        "Active Service"
+    )
+    holdings_str = ", ".join(str(x) for x in holdings) if isinstance(holdings, list) else str(holdings)
+    ver_user_utt = account_data.get("verification_dialogue_turn") or f"Sure, my phone number is {cli} and my postcode is {postcode}."
 
     if scenario_type == "Happy Path":
         return [
             {
                 "user": initial_utt,
-                "agent": f"Hello! I would be glad to help you with {domain_label.lower()}. For your security, could you please confirm your registered phone number and postcode?"
+                "agent": f"Hello! I would be glad to help you with {domain_label.lower()}. For your security, could you please verify your account details?"
             },
             {
-                "user": f"Sure, my phone number is {cli} and my postcode is {postcode}.",
-                "agent": f"Thank you for verifying. I have located your account with {holdings_str}. I am checking the current status... Everything is active and running normally."
+                "user": ver_user_utt,
+                "agent": f"Thank you for verifying. I have located your account ({holdings_str}). I am checking the current status... Everything is active and running normally."
             },
             {
                 "user": "That sounds great, thank you for confirming!",
@@ -91,10 +99,10 @@ def build_multi_turn_dialogue(
             },
             {
                 "user": f"Sorry, yes. I was asking about my {domain_label.lower()}.",
-                "agent": f"No problem at all! I can certainly assist you with {domain_label.lower()}. Could you please confirm your postcode so we can pull up your details?"
+                "agent": f"No problem at all! I can certainly assist you with {domain_label.lower()}. Could you please confirm your account details so we can pull up your records?"
             },
             {
-                "user": f"My postcode is {postcode}.",
+                "user": ver_user_utt,
                 "agent": f"Thank you! Your account is located and ready. Let me provide the information you need right away."
             }
         ]
@@ -219,13 +227,13 @@ def reconcile_case_with_latest_agent(
     if updated.get("turns") and updated.get("verification_required") == "HLV":
         turns = list(updated["turns"])
         has_ver_turn = any(
-            any(w in (t.get("user", "") + t.get("agent", "")).lower() for w in ["postcode", "phone", "verify", "password"])
+            any(w in (t.get("user", "") + t.get("agent", "")).lower() for w in ["postcode", "phone", "verify", "password", "ssn", "pnr", "order", "dob"])
             for t in turns
         )
         if not has_ver_turn and len(turns) >= 1:
             account = hydrator.get_account_for_test(subagent_key, "Happy Path", auth_required=True)
             ver_turn = {
-                "user": f"My phone number is {account.get('cli_phone')} and my postcode is {account.get('postcode')}.",
+                "user": account.get("verification_dialogue_turn", "Sure, here are my verified credentials."),
                 "agent": f"Thank you for verifying. I have accessed your account. How can I assist you with {domain_label.lower()} today?"
             }
             turns.insert(1, ver_turn)

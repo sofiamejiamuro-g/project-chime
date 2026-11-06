@@ -31,14 +31,18 @@ chime --suite sanity --all --app-dir ./cxas_app
 Ingests client goldens from an existing YAML or Excel matrix, fills missing slots with synthesized guardrails/fallbacks, and hydrates test accounts:
 ```bash
 chime --suite regression --all \
+  --profile banking \
   --goldens ./evals/goldens \
   --accounts-file ./configs/accounts.example.json \
   --app-dir ./cxas_app
 ```
 
-### 3. Generate Both Simulations and Platform Goldens for a Specific Sub-Agent
+### 3. Generate with Custom Schema Configuration
+Use `--hydration-config` to define arbitrary domain profiles (Healthcare, Logistics, etc.) or `--profile` for built-in industry domains (`telecom`, `banking`, `travel`, `retail`, `generic`):
 ```bash
-chime --suite sanity --subagent techsetup --generate-goldens --app-dir ./cxas_app
+chime --suite sanity --subagent techsetup --generate-goldens \
+  --profile travel \
+  --app-dir ./cxas_app
 ```
 
 ### 4. Execute Generated Simulations in `cxas-scrapi`

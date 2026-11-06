@@ -47,6 +47,10 @@ def main():
                         help="Root output directory for generated suites (default: ./evals)")
     parser.add_argument("--app-title", default="Conversational AI Concierge",
                         help="Application title for reports and workbooks")
+    parser.add_argument("--profile", default=None,
+                        help="Domain profile for data hydration: 'telecom', 'banking', 'travel', 'retail', 'generic'")
+    parser.add_argument("--hydration-config", default=None,
+                        help="Path to custom domain profile / hydration configuration JSON/YAML")
     args = parser.parse_args()
 
     if not args.subagent and not args.all:
@@ -113,12 +117,19 @@ def main():
     print(f"Tier:               {args.suite.upper()}")
     print(f"Synchronizing:      {len(targets)} subagent(s)")
     print(f"Agents Directory:   {agents_dir or 'Synthetic Spec'}")
+    print(f"Domain Profile:     {args.profile or 'Auto / Telecom'}")
+    if args.hydration_config:
+        print(f"Hydration Config:   {args.hydration_config}")
     print(f"Accounts Pool:      {args.accounts_file or 'Default Synthetic Pool'}")
     print(f"Goldens Source:     {args.goldens or 'None (Autonomous Dynamic Synthesis)'}")
     print(f"Output Directory:   {args.output_dir}\n")
 
     # 4. Initialize hydrator
-    hydrator = AccountHydrator(args.accounts_file)
+    hydrator = AccountHydrator(
+        accounts_path=args.accounts_file,
+        profile_name=args.profile,
+        hydration_config_path=args.hydration_config
+    )
 
     # 5. Process targets and generate suites
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

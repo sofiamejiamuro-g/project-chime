@@ -1,0 +1,60 @@
+{
+  "domain": "telecom",
+  "display_label": "Telecommunications & Broadband",
+  "primary_identifiers": ["cli_phone", "account_id", "telephone_number", "mobile_number"],
+  "verification": {
+    "llv": ["cli_phone", "postcode"],
+    "hlv": ["security_password", "one_time_passcode"]
+  },
+  "summary_template": "CLI: {cli_phone} | Postcode: {postcode} | Pwd: {security_password} | Holdings: [{products}]",
+  "channel_defaults": {
+    "voice": {
+      "dnis": "+18005550199",
+      "dtmf_card": "4111222233334444"
+    },
+    "chat": {
+      "platform": "web_desktop_chrome",
+      "auth_type": "sms_otp"
+    }
+  },
+  "mock_tools": {
+    "diagnose_line": {
+      "status": "PASS",
+      "download_speed_mbps": 940,
+      "upload_speed_mbps": 110,
+      "latency_ms": 12,
+      "line_sync": "UP"
+    },
+    "lookup_account": {
+      "account_status": "ACTIVE",
+      "billing_standing": "GOOD",
+      "package": "Gigabit Ultrafast Fiber"
+    }
+  },
+  "sample_accounts": [
+    {
+      "account_id": "ACC-TEL-0841",
+      "cli_phone": "07700900123",
+      "postcode": "SW1A 1AA",
+      "security_password": "BlueStar77!",
+      "chat_user_id": "usr_tel_841",
+      "one_time_passcode": "482910",
+      "products": ["Gigabit Fiber Broadband", "Digital Stream Box"],
+      "billing_status": "Current",
+      "line_status": "Operational / Optimal",
+      "tags": ["techsetup", "broadband", "voice_ivr", "chat"]
+    },
+    {
+      "account_id": "ACC-TEL-0952",
+      "cli_phone": "07700900456",
+      "postcode": "EC1A 1BB",
+      "security_password": "SafeRiver99!",
+      "chat_user_id": "usr_tel_952",
+      "one_time_passcode": "739104",
+      "products": ["Fiber Broadband", "Streaming Pass"],
+      "billing_status": "Overdue £45.00",
+      "line_status": "Degraded / Flashing Orange",
+      "tags": ["billing", "billing_complaints", "voice_ivr", "chat"]
+    }
+  ]
+}

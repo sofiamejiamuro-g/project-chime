@@ -16,14 +16,37 @@ def sanitize_eval_name(name: str) -> str:
     return clean or "eval_scenario"
 
 
+def extract_session_parameters(account: Dict[str, Any]) -> Dict[str, str]:
+    """Dynamically extracts session parameters for cxas-scrapi avoiding internal metadata."""
+    session_params = {}
+    if not account or not account.get("account_id") or "N/A" in str(account.get("account_id")):
+        return session_params
+
+    ignore_keys = {
+        "mock_tools", "channel_context", "formatted_summary",
+        "verification_dialogue_turn", "tags"
+    }
+    for k, v in account.items():
+        if k not in ignore_keys and v is not None:
+            if isinstance(v, (str, int, float, bool)):
+                session_params[k] = str(v)
+            elif isinstance(v, list) and all(isinstance(x, (str, int, float)) for x in v):
+                session_params[k] = ", ".join(str(x) for x in v)
+    return session_params
+
+
 def build_response_guide(tc: Dict[str, Any]) -> str:
     """Builds a rich persona guidance string for LLMUserConversation in cxas-scrapi."""
     account = tc.get("account_details", {})
-    cli = account.get("cli_phone", "07700900123")
-    postcode = account.get("postcode", "SW1A 1AA")
-    pwd = account.get("security_password", "VerifiedPass123!")
-    holdings = account.get("products", [])
-    holdings_str = ", ".join(holdings) if isinstance(holdings, list) else str(holdings)
+    holdings = (
+        account.get("products") or
+        account.get("accounts") or
+        account.get("flight_number") or
+        account.get("item_name") or
+        account.get("plan_name") or
+        ""
+    )
+    holdings_str = ", ".join(str(x) for x in holdings) if isinstance(holdings, list) else str(holdings)
     scen_type = tc.get("scenario_type", "Happy Path")
     init_utt = tc.get("initial_utterance", "")
 
@@ -33,12 +56,16 @@ def build_response_guide(tc: Dict[str, Any]) -> str:
     ]
 
     if scen_type == "Happy Path":
-        guide_lines.append(
-            f"If prompted for identity verification, provide your registered CLI phone ({cli}), "
-            f"postcode ({postcode}), and security password ({pwd})."
-        )
+        ver_turn = account.get("verification_dialogue_turn")
+        if ver_turn:
+            guide_lines.append(f"If prompted for identity verification, provide: \"{ver_turn}\".")
+        else:
+            cli = account.get("cli_phone", "07700900123")
+            postcode = account.get("postcode", "SW1A 1AA")
+            guide_lines.append(f"If prompted for identity verification, provide your phone ({cli}) and postcode ({postcode}).")
+
         if holdings_str:
-            guide_lines.append(f"Your active products/subscriptions: {holdings_str}.")
+            guide_lines.append(f"Your active holdings/subscriptions: {holdings_str}.")
         guide_lines.append("Cooperate with the assistant's instructions and confirm resolution once completed.")
     elif scen_type == "Fallback":
         guide_lines.append(
@@ -105,16 +132,7 @@ def export_scrapi_simulation_suite(
         tags = [priority, subagent_key, sanitize_eval_name(scen_type)] + channels_tags
 
         account = tc.get("account_details", {})
-        session_params = {}
-        if account and account.get("account_id") and "N/A" not in str(account.get("account_id")):
-            session_params = {
-                "account_id": str(account.get("account_id", "")),
-                "cli_phone": str(account.get("cli_phone", "")),
-                "postcode": str(account.get("postcode", "")),
-                "chat_user_id": str(account.get("chat_user_id", "")),
-                "billing_status": str(account.get("billing_status", "Current")),
-                "line_status": str(account.get("line_status", "Active"))
-            }
+        session_params = extract_session_parameters(account)
 
         response_guide = build_response_guide(tc)
         expectations = build_expectations(tc)
@@ -196,9 +214,10 @@ def export_scrapi_goldens_suite(
             else:
                 turns.append({"user": cur_user, "agent": cur_agent})
 
+        account = tc.get("account_details", {})
         conv_entry = {
             "conversation": conv_name,
-            "session_parameters": {},
+            "session_parameters": extract_session_parameters(account),
             "turns": turns,
             "expectations": build_expectations(tc),
             "tags": [tc.get("priority", "P1"), subagent_key, sanitize_eval_name(tc.get("scenario_type", "happy_path"))]
