@@ -19,7 +19,7 @@ Project CHIME establishes an automated, omnichannel testing pipeline for Google 
 
 ---
 
-## 🏆 Key Values for Hackathon & Delivery Teams
+## 🏆 Key Enterprise Values & Capabilities
 
 * **Zero-Context Human QA**: Testers never have to guess test accounts, search for active order numbers, or invent spoken dialogue turns. Every test row has exact turn-by-turn utterances and pre-hydrated test credentials.
 * **100% Cross-Customer & Multi-Vertical**: Decoupled from any single client schema. Includes built-in profiles for **Telecom**, **Banking**, **Travel / Airlines**, **Retail / E-Commerce**, and **Generic**, with full support for custom YAML/JSON manifests.

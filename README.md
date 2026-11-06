@@ -7,36 +7,48 @@
 [![Zero External Excel Dependencies](https://img.shields.io/badge/Excel-Native%20OpenXML-green.svg)]()
 [![cxas-scrapi Compliant](https://img.shields.io/badge/Evals-cxas--scrapi%20Native-blue.svg)](https://github.com/GoogleCloudPlatform/cxas-scrapi)
 [![Omnichannel](https://img.shields.io/badge/Modality-Voice%20IVR%20%2B%20Digital%20Chat-orange.svg)]()
-[![Hackathon: GECX Ignite 2026](https://img.shields.io/badge/Hackathon-GECX%20Ignite%202026-gold.svg)]()
+[![Integration: cxas-scrapi](https://img.shields.io/badge/Integration-cxas--scrapi%20Evals-brightgreen.svg)]()
 
 ---
 
-## 🏆 Hackathon Spotlight: GECX Ignite 2026
-> **Theme**: Scaling Google Customer Engagement Suite (CES / CXAS) Deployments  
-> **Challenge**: Eliminating Code-to-QA Drift, Blind Dialing Bottlenecks, and Channel Silos across Enterprise Conversational AI Implementations.
+## 📌 Enterprise Overview: The Dual-Channel Challenge in CXAS
 
-In enterprise CXAS deployments across Google Cloud customers (Telecommunications, Banking, Travel, Retail, Healthcare), conversational agents operate across two radically different channels:
+In enterprise Customer Experience Agent Studio (CXAS) deployments across Google Cloud customers (Telecommunications, Banking, Travel, Retail, Healthcare), conversational agents operate across two radically different channels:
 1. **Telephony Voice IVR**: Audio calls streaming over SIP trunks, speech-to-text (STT), acoustic timeouts, DTMF keypad inputs, and telephony ANI/DNIS routing.
 2. **Digital Messaging / Chat**: Web chat widgets, iOS/Android mobile SDKs, rich carousels, JWT authentication tokens, and asynchronous user sessions.
 
-Before **Project CHIME**, testing these dual-channel agents was manual, fragmented, and brittle. Project CHIME was engineered from the ground up to unify automated LLM simulations and human-in-the-loop manual testing into an autonomous, self-healing, cross-customer evaluation engine.
+As conversational sub-agents undergo continuous prompt engineering, OpenAPI tool updates, and callback rewiring, testing teams face four critical bottlenecks:
+
+```
+                            THE ENTERPRISE CXAS TESTING GAP
+  
+      Agent Codebase Drift                  Tester Guesswork                  Channel Disparity
+  ┌──────────────────────────┐        ┌──────────────────────────┐       ┌──────────────────────────┐
+  │ Prompts, OpenAPI tools & │        │ Human testers lack real  │       │ Voice IVR and Web Chat   │
+  │ auth callbacks change    │───────▶│ accounts & credentials;  │──────▶│ tested in silos; subtle  │
+  │ daily; static test       │        │ 35%-40% false-failure    │       │ discrepancies slip into  │
+  │ matrices rot in hours.   │        │ rate during UAT.         │       │ production unchecked.    │
+  └──────────────────────────┘        └──────────────────────────┘       └──────────────────────────┘
+```
+
+**Project CHIME** is an autonomous, dual-target testing harmonizer designed for **`GoogleCloudPlatform/cxas-scrapi`**. By introspecting sub-agent instructions, OpenAPI tools, runtime callbacks, and baseline client goldens, Project CHIME bridges the gap between **autonomous headless CI/CD evaluation** and **human-in-the-loop zero-context manual testing**.
 
 ---
 
-## 💥 The Problem: Why Enterprise CXAS Testing Breaks
+## 💡 What Project CHIME Delivers: The 4 Core Artifacts
 
-| Testing Bottleneck | What Happens Today (Without CHIME) | The Business & Delivery Impact |
-| :--- | :--- | :--- |
-| **1. Dual-Channel Code-to-QA Drift** | Sub-agent prompts, OpenAPI tools, and authentication callbacks change continuously during agile development sprints. Test matrices in spreadsheets remain static and rot within hours. | Engineering teams spend **2 to 3 days per release cycle** manually rewriting test sheets or fixing broken golden assertions. |
-| **2. The "Blind Dialing" & Credential Bottleneck** | Testers assigned to dial IVR phone lines or test chat widgets lack matched test accounts (CLI phone numbers, postal codes, SSNs, booking PNRs, or active holdings). Testers guess or invent credentials on the fly. | **35%–40% false-failure rate** during UAT; backend API calls fail on fake account lookups rather than actual conversational agent errors. |
-| **3. Fragmented Modality Silos** | Voice IVR and Web Chat are evaluated by different teams with disparate test cases. Subtle inconsistencies in business rules, compliance prompts, or routing paths slip through undetected to production. | Channel disparity, customer frustration, and compliance breaches (e.g. PCI-DSS card disclosures accepted in voice but blocked in chat). |
-| **4. Customer & Vertical Lock-in** | Evals scripts are hardcoded to specific customer entities (e.g., broadband phone numbers), making it impossible to reuse the evaluation suite across different enterprise clients. | Every new customer onboarding requires reinventing testing pipelines from scratch. |
+From a single CLI invocation, Project CHIME simultaneously synthesizes four production deliverables:
+
+| Deliverable Artifact | Destination Path | Target Audience | Primary Function & Value |
+| :--- | :--- | :--- | :--- |
+| **1. Native `SimulationEvals`** | `evals/simulations/*.yaml` | Automated CI/CD, `cxas-scrapi` Runner | Headless LLM user conversation simulation specifications with persona guidance, success criteria, and session parameters. |
+| **2. Native Platform Goldens** | `evals/goldens/*.yaml` | QA Automation, Regression Gate | Turn-by-turn deterministic evaluation suites with snapshot versioning (`v1_baseline`, `v2`, `history.json`). |
+| **3. Zero-Context Manual QA Suites** | `evals/manual_qa/*.xlsx` | UAT Testers, Manual QA, Business Owners | Multi-tab Excel workbooks with turn-by-turn mock dialogues and pre-hydrated customer credentials. **Zero external dependencies** (native OpenXML). |
+| **4. Decisions & Changes Reports** | `evals/reports/*_Decisions_Report.md` | Tech Leads, Security, Compliance | Executive audit trail detailing HLV/LLV security rationale, 5-pillar guardrails, detected tool diffs, and priority distribution. |
 
 ---
 
-## 💡 The Solution: What Project CHIME Delivers
-
-Project CHIME bridges the gap between **autonomous headless CI/CD evaluation** and **human-in-the-loop zero-context manual testing**:
+## 🏛 4-Stage Omnichannel Pipeline
 
 ```
                                   PROJECT CHIME ARCHITECTURE
@@ -82,16 +94,11 @@ Project CHIME bridges the gap between **autonomous headless CI/CD evaluation** a
 
 ## 🎯 Value for Human QA Testers: Zero-Context Execution
 
-A core innovation of Project CHIME is the **Zero-Context Manual QA Suite (`evals/manual_qa/*.xlsx`)**. 
-
 Traditional QA spreadsheets require testers to already know the customer's domain, understand the agent's internal routing, and guess test credentials. **Project CHIME eliminates 100% of tester guesswork**:
 
-### 1. Dedicated Dual-Channel Tabs
-Workbooks automatically partition test cases into dedicated tabs for **Voice IVR** (telephony testing with acoustic timeouts and DTMF keypad checks) and **Digital Chat** (messaging widget flows with session tokens).
-
-### 2. Turn-by-Turn Mock Dialogues
+### 1. Turn-by-Turn Mock Dialogues
 Every test row includes an authentic, turn-by-turn mock script showing exactly what the tester should say or type, and what the agent is expected to answer:
-```
+```text
 Turn 1 [User]:  "Hi, I need assistance with my customer support."
 Turn 1 [Agent]: "Hello! For your security, could you please verify your account number and date of birth?"
 Turn 2 [User]:  "Sure, my account number is 7718290312 and my DOB is 1975-11-23."
@@ -99,11 +106,32 @@ Turn 2 [Agent]: "Thank you for verifying. I have located your Platinum Checking 
 ```
 *Testers never have to invent turns, wonder what to say, or stall on live phone calls.*
 
-### 3. Pre-Hydrated Test Credentials in Every Row
+### 2. Pre-Hydrated Test Credentials in Every Row
 Testers never face a blank prompt asking for an unknown customer account. Each test case is paired with real, verified credentials from the project's hydration pool:
 * **Voice IVR**: Telephony ANI caller phone, destination DNIS, DTMF card/PIN input, and verbal postcode.
 * **Digital Chat**: Authenticated user ID, JWT token, and session platform.
 * **Account Holdings**: Active products, balances, reservation codes, or tracking numbers matching mock tool responses.
+
+### 3. Dedicated Dual-Channel Tabs & Comprehensive Column Schema
+Workbooks automatically partition test cases into dedicated tabs for **Voice IVR** (telephony testing with acoustic timeouts and DTMF keypad checks) and **Digital Chat** (messaging widget flows with session tokens).
+
+Each sheet includes 16 standardized operational columns:
+1. `Test Case ID`: Unique identifier (e.g. `TC-SAN-TECH-001`).
+2. `Journey`: Journey or sub-agent domain label.
+3. `Scenario Name`: Human-readable test goal.
+4. `Scenario Type`: `Happy Path`, `Fallback`, `Escalation`, or `Guardrail`.
+5. `Priority`: Mathematical priority tier (`P0`, `P1`, `P2`).
+6. `Test Account / Credential`: Formatted summary of pre-hydrated test credentials.
+7. `Primary AppTag`: Expected routing tag (e.g. `intent_techsetup`).
+8. `Verification Required`: High-Level Verification (`HLV`) or Low-Level Verification (`LLV`).
+9. `KB Eligible`: Knowledge base retrieval eligibility (`YES` / `NO`).
+10. `Expected Agent Path`: Expected dispatch path (e.g. `root_agent -> techsetup`).
+11. `Initial Utterance`: Exact phrase to initiate the conversation.
+12. `Turn-by-Turn Mock Dialogue`: Complete multi-turn script for execution.
+13. `Expected Flow`: Sequence of tools or backend callbacks expected.
+14. `Pass Criteria`: Concrete verification conditions for the tester.
+15. `Actual Result`: Field for tester notes during execution.
+16. `Status`: Ready-made status dropdown (`PASS`, `FAIL`, `BLOCKED`, `NOT_RUN`).
 
 ### 4. Zero External Dependencies
 The entire Excel generation engine is built using **pure Python standard library OpenXML streaming** (`chime/generators/openxml_excel.py`). It requires **zero external libraries** (no `openpyxl`, no `pandas`, no `xlsxwriter`). It runs in any constrained CI container, Cloud Shell, or sandbox in milliseconds.
@@ -148,12 +176,6 @@ When a customer's baseline goldens get out of sync with recent agent code change
   - `v2_<timestamp>/golden_<subagent>.yaml`: Reconciled and self-healed golden.
   - `history_<subagent>.json`: Cryptographic audit ledger tracking reasons for every version transition.
 
-### 3. Decisions & Changes Audit Report (`_Decisions_Report.md`)
-Generates executive markdown documentation detailing:
-* Mathematical priority distribution (`P0`, `P1`, `P2`).
-* Rationale for 5-pillar guardrail enforcement (`GR01`-`GR05`).
-* Diffs between legacy golden assertions and newly introspected codebase tools.
-
 ---
 
 ## 🌐 Cross-Customer & Multi-Vertical Portability
@@ -175,7 +197,7 @@ Switch industries with a single command flag:
 Customers never need to reformat their data. CHIME accepts any JSON or YAML account pool, auto-discovers ID fields, formats summary cards, and dynamically maps all attributes into `cxas-scrapi` `session_parameters`:
 
 ```yaml
-# Example: Healthcare Patient Manifest
+# Example: Healthcare Patient Manifest (Arbitrary Keys)
 accounts:
   - patient_id: "MED-99412"
     mrn_number: "MRN-008129"
@@ -233,7 +255,7 @@ Every CHIME suite validates five mandatory enterprise safety pillars:
 
 ---
 
-## ⚡ Quickstart & CLI Reference
+## ⚡ Step-by-Step Quickstart & CLI Reference
 
 ### 1. Installation
 Project CHIME requires Python 3.10+ and standard tools.
@@ -246,37 +268,126 @@ cd project-chime
 pip install -e .
 ```
 
-### 2. Common CLI Invocations
+---
 
+### 2. Walkthrough: Common Commands & Generated Results
+
+#### Command A: Run Sanity Evaluation Suite (Fast CI Gate)
+Generates 12 mathematically distributed test cases per sub-agent using the Banking profile:
 ```bash
-# 1. Run Sanity suite across all subagents in any CXAS app (using Banking profile)
-chime --suite sanity --all --profile banking --app-dir /path/to/cxas_app
-
-# 2. Ingest customer baseline goldens and reconcile Regression suite with Travel profile
-chime --suite regression --all \
-  --profile travel \
-  --goldens ./evals/goldens \
-  --accounts-file ./configs/passengers.yaml \
-  --app-dir /path/to/cxas_app
-
-# 3. Synchronize a specific subagent with custom domain configuration and snapshot goldens
-chime --suite sanity --subagent techsetup --generate-goldens \
-  --hydration-config ./configs/healthcare_profile.yaml \
-  --accounts-file ./configs/patients.json \
-  --output-dir ./evals \
-  --app-dir /path/to/cxas_app
+chime --suite sanity --all --profile banking --output-dir ./evals --app-dir ./cxas_app
 ```
 
-### 3. Run Headless Automated Evals in `cxas-scrapi`
-```bash
-cxas evals run --eval-file ./evals/simulations/sanity_simulations_techsetup.yaml
+**Terminal Output:**
+```text
+🔔 Project CHIME · Unified Voice IVR & Chat Simulation Engine
+============================================================
+Tier:               SANITY
+Synchronizing:      1 subagent(s)
+Agents Directory:   ./cxas_app/agents
+Domain Profile:     banking
+Accounts Pool:      Default Synthetic Pool
+Goldens Source:     None (Autonomous Dynamic Synthesis)
+Output Directory:   ./evals
+
+Processing journey: Customer Support (customer_support)...
+   • Version Snapshot: v2 (Baseline: v1)
+
+✅ Synchronization Complete!
+   • Total Test Cases:      12
+   • Automated Simulations: ./evals/simulations/
+   • Platform Goldens:      ./evals/goldens/ (Active & Version History)
+   • Manual QA Excel:       ./evals/manual_qa/Sanity_Manual_QA_Suite.xlsx
+   • Decisions Report:      ./evals/reports/Sanity_Decisions_Report.md
+```
+
+**What is generated on disk:**
+```
+evals/
+├── simulations/
+│   └── sanity_simulations_customer_support.yaml   # Native cxas-scrapi SimulationEvals
+├── goldens/
+│   ├── golden_customer_support.yaml               # Active Platform Goldens
+│   └── versions/
+│       ├── v1_baseline/golden_customer_support.yaml
+│       ├── v2_20261106_013936/golden_customer_support.yaml
+│       └── history_customer_support.json          # Audit ledger of all changes
+├── manual_qa/
+│   └── Sanity_Manual_QA_Suite.xlsx                # Multi-tab zero-context Excel workbook
+└── reports/
+    └── Sanity_Decisions_Report.md                 # Executive changes & decisions audit
 ```
 
 ---
 
-## 📊 Measured Impact & Hackathon ROI Metrics
+#### Command B: Ingest Customer Goldens & Harmonize Regression Suite
+Ingests existing client golden test cases (YAML or Excel), introspects the sub-agent's codebase for tool/callback changes, fills missing guardrails/fallbacks up to 26 test cases, and reconciles outdated policies:
+```bash
+chime --suite regression --all \
+  --profile travel \
+  --goldens ./client_goldens \
+  --accounts-file ./configs/passengers.yaml \
+  --output-dir ./evals \
+  --app-dir ./cxas_app
+```
 
-During testing across multi-turn sub-agents, Project CHIME demonstrated dramatic, measurable operational gains:
+**Terminal Output:**
+```text
+🔔 Project CHIME · Unified Voice IVR & Chat Simulation Engine
+============================================================
+Tier:               REGRESSION
+Synchronizing:      3 subagent(s)
+Agents Directory:   ./cxas_app/agents
+Domain Profile:     travel
+Accounts Pool:      ./configs/passengers.yaml
+Goldens Source:     ./client_goldens
+Output Directory:   ./evals
+
+Processing journey: Flight Booking (booking)...
+   • Ingested 8 baseline goldens from './client_goldens/golden_booking.yaml'
+   • Codebase diff detected: tool 'lookup_reservation' added; upgraded auth policy to HLV.
+   • Synthesized 18 missing cases (5 Fallbacks, 1 Escalation, 10 Guardrails).
+   • Version Snapshot: v3 (Baseline: v1, Previous: v2)
+
+✅ Synchronization Complete!
+   • Total Test Cases:      78 (26 x 3 subagents)
+   • Manual QA Excel:       ./evals/manual_qa/Regression_Manual_QA_Suite.xlsx
+   • Decisions Report:      ./evals/reports/Regression_Decisions_Report.md
+```
+
+---
+
+#### Command C: Run with Custom Schema Configuration (e.g. Healthcare)
+Pass a bespoke industry profile and an arbitrary customer manifest:
+```bash
+chime --suite sanity --subagent techsetup --generate-goldens \
+  --hydration-config ./configs/healthcare_profile.yaml \
+  --accounts-file ./configs/patients.json \
+  --output-dir ./evals \
+  --app-dir ./cxas_app
+```
+
+**What happens:**
+* Verification turns automatically adapt to: *"Sure, my patient ID is MED-99412 and my name is Eleanor Vance."*
+* `session_parameters` dynamically extracts `patient_id`, `mrn_number`, `insurance_policy`, and `primary_physician` without losing custom fields.
+* Excel columns display the medical credentials in the `Test Account` column.
+
+---
+
+#### Command D: Execute Generated Simulations Headless in `cxas-scrapi`
+Run the generated simulations through the official `cxas-scrapi` LLM-driven user conversation runner:
+```bash
+cxas evals run --eval-file ./evals/simulations/sanity_simulations_customer_support.yaml
+```
+
+**Result:**
+The `cxas-scrapi` runner spins up the `LLMUserConversation` simulated customer using the persona response guide, executes turns against the CXAS agent, evaluates expectations, and outputs pass/fail assertions directly in CI/CD terminal logs.
+
+---
+
+## 📊 Production Impact & Operational Metrics
+
+Across production deployments and multi-turn conversational evaluations, Project CHIME provides substantial operational improvements:
 
 ```
                                   MEASURED EFFICIENCY GAINS
@@ -291,7 +402,7 @@ During testing across multi-turn sub-agents, Project CHIME demonstrated dramatic
                                    ████████████ (With CHIME: 100% IVR & Chat Parity)
 ```
 
-* **98% Reduction in Test Suite Authoring Time**: What previously took senior conversational AI engineers 2 to 3 days per release is synthesized in **under 45 seconds**.
+* **98% Reduction in Test Suite Authoring Time**: What previously took conversational AI engineers 2 to 3 days per release is synthesized in **under 45 seconds**.
 * **95% Reduction in UAT False Failures**: By injecting hydrated, valid credentials (CLI, postcode, DOB, PNR, SSN) into every row, API verification lookups succeed consistently, eliminating false alerts.
 * **100% Cross-Channel Parity**: Telephony IVR and Web Chat test cases are synchronized against identical business rules, tools, and guardrails.
 * **Zero Onboarding Ramp for QA**: Junior testers and client business stakeholders execute manual QA immediately with zero domain training using the turn-by-turn mock scripts.
@@ -330,7 +441,18 @@ project-chime/
 
 ---
 
+## 🧪 Testing & Verification
+
+Project CHIME includes a complete unit test suite validating cxas-scrapi schema compliance, OpenXML packaging integrity, and dynamic data hydration across all profiles:
+
+```bash
+# Run all unit tests
+python3 -m unittest discover -s tests
+```
+
+---
+
 ## 👥 Authors & Attribution
 
 * **Sofia Mejia** (`sofiamejiamuro@google.com`) — Conversational AI Engineer, Google Cloud Customer Engagement Suite (CXAS) Delivery Team.
-* **GECX Ignite 2026**: The CXAS Innovation Challenge.
+* **Google Cloud Conversational AI & Engineering Excellence**.
