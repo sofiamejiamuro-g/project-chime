@@ -282,7 +282,64 @@ pip install -e .
 
 ---
 
-### 2. Walkthrough: Common Commands & Generated Results
+### 2. Instant Test Drive: Included Sample CXAS Application (`sample_cxas_app/`)
+
+Project CHIME includes a complete, self-contained CXAS application (`sample_cxas_app/`) so you can run and verify the entire evaluation harmonizer out of the box without needing an external CXAS project:
+
+```
+sample_cxas_app/
+├── app.json                                 # Application configuration & default session parameters
+├── manifest.json                            # Subagent manifest & tool bindings
+└── agents/
+    ├── billing/
+    │   ├── billing.json                     # Tools (lookup_invoice, process_dtmf_payment, apply_courtesy_credit) & HLV callback
+    │   └── instruction.txt                  # Subagent persona & policy instructions
+    └── techsetup/
+        ├── techsetup.json                   # Tools (diagnose_line, reboot_router, check_wifi_coverage) & PIN callback
+        └── instruction.txt                  # Subagent persona & policy instructions
+```
+
+#### Quick Verification Command
+Run Project CHIME directly against the included sample application:
+```bash
+python3 -m chime.cli --suite sanity --all --app-dir ./sample_cxas_app --output-dir ./evals
+```
+
+**Terminal Output:**
+```text
+🔔 Project CHIME · Unified Voice IVR & Chat Simulation Engine
+============================================================
+Tier:               SANITY
+Synchronizing:      2 subagent(s)
+Agents Directory:   ./sample_cxas_app/agents
+Domain Profile:     Auto / Telecom
+Accounts Source:    profile (telecom)
+Goldens Source:     None (Autonomous Dynamic Synthesis)
+Output Directory:   ./evals
+
+Processing journey: Billing (billing)...
+   • Version Snapshot: v2 (Baseline: v1)
+Processing journey: Techsetup (techsetup)...
+   • Version Snapshot: v2 (Baseline: v1)
+
+✅ Synchronization Complete!
+   • Total Test Cases:      24
+   • Automated Simulations: ./evals/simulations/
+   • Platform Goldens:      ./evals/goldens/ (Active & Version History)
+   • Manual QA Spreadsheet: ./evals/manual_qa/Sanity_Manual_QA_Suite.xlsx (Google Sheets / OpenXML)
+   • Decisions Report:      ./evals/reports/Sanity_Decisions_Report.md
+```
+
+**Artifacts Generated:**
+* **24 Test Cases**: 12 Sanity cases each for `billing` and `techsetup` (5 Happy Paths, 1 Timeout Fallback, 1 Escalation, 5 Hard Guardrails).
+* **Automated Simulations**: `evals/simulations/` (`cxas-scrapi` native YAML).
+* **Platform Goldens**: `evals/goldens/` (turn-by-turn with versioning history).
+* **Zero-Context Spreadsheets**: `evals/manual_qa/Sanity_Manual_QA_Suite.xlsx` (Google Sheets / OpenXML compatible).
+* **Decisions Report**: `evals/reports/Sanity_Decisions_Report.md`.
+
+---
+
+### 3. Walkthrough: Common Commands & Generated Results
 
 #### Command A: Run Sanity Evaluation Suite (Fast CI Gate)
 Generates 12 mathematically distributed test cases per sub-agent. You can run directly against the included self-contained sample app (`./sample_cxas_app`):
