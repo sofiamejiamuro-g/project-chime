@@ -1,0 +1,7 @@
+{
+  "name": "Omnichannel Concierge Assistant",
+  "displayName": "Telecom & Broadband AI Concierge",
+  "defaultLanguageCode": "en",
+  "timeZone": "America/New_York",
+  "entryAgent": "root_agent"
+}

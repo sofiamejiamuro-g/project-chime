@@ -1,0 +1,16 @@
+{
+  "name": "techsetup",
+  "displayName": "Broadband Tech Setup & Diagnostics",
+  "description": "Handles broadband connectivity troubleshooting, Wi-Fi optimization, and equipment restarts.",
+  "tools": [
+    "projects/sample-cxas/locations/global/tools/diagnose_line",
+    "projects/sample-cxas/locations/global/tools/reboot_router",
+    "projects/sample-cxas/locations/global/tools/check_wifi_coverage"
+  ],
+  "beforeAgentCallbacks": [
+    "projects/sample-cxas/locations/global/callbacks/validate_account_pin"
+  ],
+  "afterToolCallbacks": [
+    "projects/sample-cxas/locations/global/callbacks/log_diagnostic_telemetry"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "billing",
+  "displayName": "Billing & Account Payments",
+  "description": "Handles monthly invoice reviews, overdue payment arrangements, and payment method updates.",
+  "tools": [
+    "projects/sample-cxas/locations/global/tools/lookup_invoice",
+    "projects/sample-cxas/locations/global/tools/process_dtmf_payment",
+    "projects/sample-cxas/locations/global/tools/apply_courtesy_credit"
+  ],
+  "beforeAgentCallbacks": [
+    "projects/sample-cxas/locations/global/callbacks/verify_hlv_credentials"
+  ]
+}

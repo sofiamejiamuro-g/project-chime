@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "cxasVersion": "2.4.0",
+  "generator": "Google Customer Experience Agent Studio",
+  "subagents": ["techsetup", "billing"]
+}
