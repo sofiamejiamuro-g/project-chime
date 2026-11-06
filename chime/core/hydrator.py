@@ -13,10 +13,15 @@ DEFAULT_SYNTHETIC_ACCOUNTS = [
         "postcode": "SW1A 1AA",
         "security_password": "BlueStar77!",
         "chat_user_id": "usr_voice_chat_841",
+        "one_time_passcode": "482910",
         "products": ["Broadband Ultrafast", "Digital TV"],
         "billing_status": "Current",
         "line_status": "Degraded / Flashing Orange",
-        "tags": ["techsetup", "broadband", "voice_ivr", "chat"]
+        "tags": ["techsetup", "broadband", "voice_ivr", "chat"],
+        "mock_tools": {
+            "lookup_account": {"status": "ACTIVE", "tier": "Ultrafast", "balance": 0.0},
+            "diagnose_line": {"line_sync": "DOWN", "snr_margin_db": 4.2, "recommendation": "reboot_hub"}
+        }
     },
     {
         "account_id": "ACC-UK-0952",
@@ -24,10 +29,15 @@ DEFAULT_SYNTHETIC_ACCOUNTS = [
         "postcode": "EC1A 1BB",
         "security_password": "SafeRiver99!",
         "chat_user_id": "usr_voice_chat_952",
+        "one_time_passcode": "739104",
         "products": ["Fiber Broadband", "Streaming Pass"],
         "billing_status": "Overdue £45.00",
         "line_status": "Healthy / Operational",
-        "tags": ["billing", "billing_complaints", "voice_ivr", "chat"]
+        "tags": ["billing", "billing_complaints", "voice_ivr", "chat"],
+        "mock_tools": {
+            "lookup_account": {"status": "ACTIVE", "tier": "Fiber", "balance": 45.0, "due_date": "2026-11-15"},
+            "fetch_invoices": {"last_bill_amount": 45.0, "disputed": False}
+        }
     },
     {
         "account_id": "ACC-UK-1023",
@@ -35,10 +45,15 @@ DEFAULT_SYNTHETIC_ACCOUNTS = [
         "postcode": "M1 1AA",
         "security_password": "Summit2026*",
         "chat_user_id": "usr_voice_chat_1023",
+        "one_time_passcode": "915234",
         "products": ["Home Move Package", "Smart Home Hub"],
         "billing_status": "Current",
         "line_status": "Pending Relocation",
-        "tags": ["homemove", "relocation", "voice_ivr", "chat"]
+        "tags": ["homemove", "relocation", "voice_ivr", "chat"],
+        "mock_tools": {
+            "lookup_account": {"status": "PENDING_MOVE", "move_date": "2026-11-20"},
+            "check_address_coverage": {"new_postcode": "M1 1AA", "max_speed_mbps": 1000}
+        }
     },
     {
         "account_id": "ACC-UK-2045",
@@ -46,10 +61,14 @@ DEFAULT_SYNTHETIC_ACCOUNTS = [
         "postcode": "G1 1AA",
         "security_password": "NovaShield12!",
         "chat_user_id": "usr_voice_chat_2045",
+        "one_time_passcode": "334812",
         "products": ["Complete Family Bundle"],
         "billing_status": "Pending Cancellation",
         "line_status": "Active",
-        "tags": ["cancellations", "downgrades", "retention", "voice_ivr", "chat"]
+        "tags": ["cancellations", "downgrades", "retention", "voice_ivr", "chat"],
+        "mock_tools": {
+            "lookup_account": {"status": "RETENTION_OFFER_ELIGIBLE", "contract_end": "2026-12-01"}
+        }
     }
 ]
 
@@ -79,7 +98,6 @@ class AccountHydrator:
                 if "accounts" in data and isinstance(data["accounts"], list):
                     self.accounts = data["accounts"]
                 else:
-                    # Flatten dictionary of named profiles
                     flattened = []
                     for k, v in data.items():
                         if isinstance(v, dict):
@@ -104,9 +122,15 @@ class AccountHydrator:
                 "cli_phone": "N/A",
                 "postcode": "N/A",
                 "security_password": "N/A",
+                "one_time_passcode": "N/A",
                 "chat_user_id": "anonymous_visitor",
                 "products": [],
-                "formatted_summary": "Unauthenticated Visitor (No Account Required)"
+                "formatted_summary": "Unauthenticated Visitor (No Account Required)",
+                "channel_context": {
+                    "voice": {"ani": "anonymous", "dnis": "+18005550100"},
+                    "chat": {"session_type": "guest", "jwt": "none"}
+                },
+                "mock_tools": {}
             }
 
         target_key = subagent_key.lower().strip()
@@ -126,6 +150,7 @@ class AccountHydrator:
         cli = acc.get("cli_phone") or acc.get("telephone_number") or acc.get("MOBILE_NUMBER", "07700900123")
         postcode = acc.get("postcode") or acc.get("POSTCODE", "SW1A 1AA")
         pwd = acc.get("security_password") or acc.get("password") or acc.get("PASSWORD", "VerifiedPass123!")
+        otp = acc.get("one_time_passcode", "581920")
         prods = acc.get("products") or acc.get("PRODUCT_FAMILY") or ["Connected Service"]
         if isinstance(prods, list):
             prods_str = ", ".join(prods)
@@ -138,5 +163,19 @@ class AccountHydrator:
         result["cli_phone"] = cli
         result["postcode"] = postcode
         result["security_password"] = pwd
+        result["one_time_passcode"] = otp
         result["formatted_summary"] = summary
+        result["channel_context"] = {
+            "voice": {
+                "ani": cli,
+                "dnis": "+18005550199",
+                "dtmf_tone_card": "4111222233334444"
+            },
+            "chat": {
+                "user_id": acc.get("chat_user_id", "usr_chime_01"),
+                "platform": "web_desktop_chrome",
+                "jwt": f"chime_jwt_token_{acc.get('account_id', '001')}"
+            }
+        }
+        result.setdefault("mock_tools", {})
         return result

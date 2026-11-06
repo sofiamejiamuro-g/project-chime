@@ -1,10 +1,11 @@
 # Project CHIME 🔔
 ### **C**onversational **H**armonization for **I**VR & **M**essaging **E**valuations
-*Unified Voice & Chat Simulation and Zero-Context Manual QA Harmonizer for Google Customer Engagement Suite (CXAS).*
+*Unified Voice & Chat Simulation and Zero-Context Manual QA Harmonizer for Google Customer Engagement Suite (CXAS) & cxas-scrapi.*
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Zero External Excel Dependencies](https://img.shields.io/badge/Excel-Native%20OpenXML-green.svg)]()
+[![cxas-scrapi Compliant](https://img.shields.io/badge/Evals-cxas--scrapi%20Native-blue.svg)](https://github.com/GoogleCloudPlatform/cxas-scrapi)
 [![Omnichannel](https://img.shields.io/badge/Modality-Voice%20IVR%20%2B%20Digital%20Chat-orange.svg)]()
 
 ---
@@ -17,34 +18,36 @@ Customer Experience Agent Studio (CXAS) sub-agents serve customers across two pr
 2. **The Blind Dialing & Chat Session Bottleneck**: Voice testers dialing live IVR lines lack matching caller CLIs and postcodes; Chat testers lack user session payloads, causing a **35%–40% false-failure rate** during UAT.
 3. **Fragmented Channel Silos**: Telephony IVR and digital chat are tested in disconnected silos without verifying identical business rules and compliance guardrails.
 
-**Project CHIME** is an autonomous, dual-target testing harmonizer. By introspecting sub-agent instructions, OpenAPI tools, runtime callbacks, and channel-specific business rules, Project CHIME simultaneously synthesizes:
-* 🤖 **Strongly-typed SCRAPI SimulationEvals (`.sim.yaml`)** for automated CI/CD regression gating.
-* 📋 **Multi-tab Zero-Context Manual QA Excel Workbooks (`.xlsx`)** with dynamic formulas and real/mock customer test credentials (Caller CLI phone, Postcode, Password, and Active Holdings).
+**Project CHIME** is an autonomous, dual-target testing harmonizer fully compatible with **`cxas-scrapi`**. By introspecting sub-agent instructions, OpenAPI tools, runtime callbacks, and baseline client goldens, Project CHIME simultaneously synthesizes:
+* 🤖 **Native `cxas-scrapi` SimulationEvals (`evals/simulations/*.yaml`)**: Goal-oriented LLM user simulations ready for execution via `cxas evals run`.
+* 🎯 **Native `cxas-scrapi` Platform Goldens (`evals/goldens/*.yaml`)**: Deterministic turn-by-turn evaluation suites.
+* 📋 **Multi-tab Zero-Context Manual QA Excel Workbooks (`evals/manual_qa/*.xlsx`)**: Complete turn-by-turn mock dialogues and pre-hydrated customer test credentials (Caller CLI phone, Postcode, Password, and Active Holdings).
+* 📝 **Decisions & Changes Audit Reports (`evals/reports/*_Decisions_Report.md`)**: Full architectural rationale for HLV/LLV verification levels, 5-pillar guardrails, detected tool diffs, and priority tiers (`P0`, `P1`, `P2`).
 
 ---
 
 ## 🏛 4-Stage Omnichannel Architecture
 
 ```
-[PRD & Sub-Agent Codebase] ──▶ [Stage 1: Dual Ingestion (Voice & Chat)]
-                                         │
-                                         ▼
-                               [Stage 2: Tool & Callback Introspection]
-                                         │
-                                         ▼
-                               [Stage 3: Tier Harmonization & Self-Healing]
-                                         │
-             ┌───────────────────────────┴───────────────────────────┐
-             ▼                                                       ▼
-   [Engine A: Headless SCRAPI]                             [Engine B: Zero-Context Manual QA]
-   - Strongly-typed .sim.yaml                              - Dedicated Voice IVR & Digital Chat tabs
-   - Speech & chat turn assertions                         - Hydrated Caller CLI, Postcode & Chat IDs
-   - Tool mocks & AppTag validation                        - Dynamic pass/fail formulas & HTML reports
+[PRD, Codebase & Baseline Goldens] ──▶ [Stage 1: Dual Ingestion (Voice & Chat)]
+                                                 │
+                                                 ▼
+                                       [Stage 2: Tool & Callback Introspection]
+                                                 │
+                                                 ▼
+                                       [Stage 3: Tier Harmonization & Self-Healing]
+                                                 │
+                     ┌───────────────────────────┴───────────────────────────┐
+                     ▼                                                       ▼
+   [Engine A: Headless cxas-scrapi]                        [Engine B: Zero-Context Manual QA]
+   - Native evals/simulations/*.yaml                       - Dedicated Voice IVR & Digital Chat tabs
+   - Native evals/goldens/*.yaml                           - Turn-by-turn mock dialogues (no guesswork)
+   - Decisions Audit Report (Markdown)                     - Hydrated Caller CLI, Postcode, Holdings & Pwd
 ```
 
 ### Mathematical Tier Harmonization
-* **Sanity Suite (12 per journey)**: 5 Happy Paths + 1 Silence Fallback + 1 Live Escalation (`escalate_to_human`) + 5 Hard Guardrails (`GR01` PCI-DSS DTMF/masking, `GR02` Competitor, `GR03` Prompt Injection, `GR04` Profanity, `GR05` Domain Grounding).
-* **Regression Suite (26 per journey)**: 10 Multi-Turn Journeys + 5 Consecutive Fallbacks + 1 Live Escalation + 10 Guardrails.
+* **Sanity Suite (12 per journey)**: 5 Happy Paths (`P0`) + 1 Silence Fallback (`P2`) + 1 Live Escalation (`P0`: `escalate_to_human`) + 5 Hard Guardrails (`P0`/`P1`: `GR01` PCI-DSS DTMF/masking, `GR02` Competitor, `GR03` Prompt Injection, `GR04` Profanity, `GR05` Domain Grounding).
+* **Regression Suite (26 per journey)**: 10 Multi-Turn Journeys (`P1`) + 5 Consecutive Fallbacks (`P2`) + 1 Live Escalation (`P0`) + 10 Guardrails (`P0`/`P1`).
 
 ---
 
@@ -55,10 +58,10 @@ Project CHIME has **zero external Excel dependencies**—all `.xlsx` workbooks a
 ### 1. Install as a Python Package
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/project-chime.git
+git clone https://github.com/GoogleCloudPlatform/cxas-scrapi.git # or project-chime
 cd project-chime
 
-# Install locally
+# Install locally in editable mode
 pip install -e .
 ```
 
@@ -67,18 +70,26 @@ pip install -e .
 # Generate Sanity test suites for all subagents in any CXAS app
 chime --suite sanity --all --app-dir /path/to/cxas_app
 
-# Generate Regression test suites with customer test account hydration
-chime --suite regression --all --accounts-file ./configs/accounts.example.json --app-dir /path/to/cxas_app
+# Ingest client baseline goldens and harmonize Regression test suite
+chime --suite regression --all \
+  --goldens /path/to/golden_evals \
+  --accounts-file ./configs/accounts.example.json \
+  --app-dir /path/to/cxas_app
 
-# Target a specific subagent
-chime --suite sanity --subagent techsetup --app-dir /path/to/cxas_app
+# Generate both Simulations, Platform Goldens, Excel Workbook & Decisions Report
+chime --suite sanity --subagent techsetup --generate-goldens --app-dir /path/to/cxas_app
+```
+
+### 3. Run Headless Automated Evals with `cxas-scrapi`
+```bash
+cxas evals run --eval-file ./evals/simulations/sanity_simulations_techsetup.yaml
 ```
 
 ---
 
 ## 🔐 Customer Test Account Manifest (`accounts.json`)
 
-To eliminate tester guesswork during live telephony IVR calls and chat sessions, provide a JSON manifest:
+To eliminate tester guesswork during live telephony IVR calls and chat sessions, provide a JSON/YAML manifest:
 
 ```json
 {
